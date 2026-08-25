@@ -55,6 +55,12 @@ public final class ArtConfig {
         new Seed(306.4, 200.0, SKIN),
         new Seed(333.5, 210.4, SKIN),
         new Seed(327.9, 175.8, SKIN),
+        new Seed(302.2, 162.4, SKIN),
+        new Seed(315.6, 168.0, SKIN),
+        new Seed(326.8, 178.1, SKIN),
+        new Seed(355.8, 208.2, SHIRT),
+        new Seed(298.9, 272.9, SHIRT),
+        new Seed(333.5, 152.4, SHIRT),
     };
 
     public static final Seed[] SCREEN_PER_FRAME = {
