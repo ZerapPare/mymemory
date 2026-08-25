@@ -42,7 +42,8 @@ public class MultiSvgAnimationApp extends JPanel {
     private int currentIndex = 0;
 
     // ------ สีที่ใช้ใน SVG (เหมือนเดิม) ------
-    private static final Color BACKDROP = new Color(0xF2E4CB);
+    private static final Color BACKDROP = new Color(0xDCEBFF);
+    private static final Color TABLE     = new Color(0xF2E4CB);
     private static final Color HAIR     = new Color(0x6B4A2E);
     private static final Color SKIN     = new Color(0xFFDCB8);
     private static final Color SHIRT    = new Color(0x7FA8D4);
@@ -56,6 +57,7 @@ public class MultiSvgAnimationApp extends JPanel {
 
     private static final Seed[] COMMON = {
         new Seed( 30.0,  30.0, BACKDROP),
+        new Seed( 218.6, 413.4, TABLE),
         new Seed(229.8, 207.6, SHIRT),
         new Seed(301.0,  75.5, HAIR),
         new Seed(325.2, 111.1, SKIN),
