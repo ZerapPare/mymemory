@@ -77,7 +77,7 @@ public class MultiSvgAnimationApp extends JPanel {
 
     private static final double[][] DAMS = {
         { 149.4, 355.4, -37.4, 456.5 },
-        {485.1, 238.3, 623.4, 257.2}
+        {485.1, 238.3, 659.5, 262.5}
     };
     private static final double DAM_WIDTH = 1.0;
     private static final int BLANK = 0xFFFFFF;
