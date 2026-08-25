@@ -111,6 +111,9 @@ public class MultiSvgAnimationApp extends JPanel {
                 // ตัวอย่าง: เพิ่มนาฬิกาที่ตำแหน่ง (300,92) ความเร็ว 1 รอบ/วินาที
                 fd.drawables.add(new WallClockDrawable(92, 70, 0.25));
 				fd.drawables.add(new WindowBackgroundDrawable());
+                // ชั้นวางต้นไม้ใต้นาฬิกา (กึ่งกลาง x, ระดับแผ่นชั้น, สเกล)
+                fd.drawables.add(new PlantShelfDrawable(92, 180, 1.0));
+
                 // สามารถเพิ่ม object อื่น ๆ ได้อีก เช่น
                 // fd.drawables.add(new AnotherDrawable(...));
                 // ------------------------------------------
