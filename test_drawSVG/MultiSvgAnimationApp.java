@@ -73,19 +73,31 @@ public class MultiSvgAnimationApp extends JPanel {
         installPicker();
 
         if (!frames.isEmpty()) {
-            timer = new Timer(ArtConfig.TICK_INTERVAL, e -> {
-                // เปลี่ยนเฟรมตามเวลา
-                if (!paused) {
-                    frameCounter += ArtConfig.TICK_INTERVAL;
-                    if (frameCounter >= ArtConfig.FRAME_INTERVAL) {
-                        frameCounter = 0;
-                        currentIndex = (currentIndex + 1) % frames.size();
-                    }
-                }
-                repaint();
-            });
-            timer.start();
-        }
+		timer = new Timer(ArtConfig.TICK_INTERVAL, e -> {
+			if (!paused) {
+				frameCounter += ArtConfig.TICK_INTERVAL;
+				if (frameCounter >= ArtConfig.FRAME_INTERVAL) {
+					frameCounter = 0;
+					
+					// === ตรวจสอบว่าเป็นเฟรมสุดท้ายหรือไม่ (ก่อนเปลี่ยน) ===
+					int oldIndex = currentIndex;
+					int nextIndex = (currentIndex + 1) % frames.size();
+					
+					// ถ้า oldIndex เป็นเฟรมสุดท้าย และ nextIndex เป็นเฟรมแรก (0)
+					if (oldIndex == frames.size() - 1 && nextIndex == 0) {
+						// เรียกโหลดฉากต่อไป
+						loadNewScene(ArtConfig.SCENE_2_FILES); // ต้องไปกำหนดใน ArtConfig
+						// หลังจากโหลดฉากใหม่เสร็จ currentIndex จะถูกรีเซ็ตเป็น 0 ใน loadNewScene
+						// เราจึงไม่ต้อง set currentIndex อีก
+					} else {
+						currentIndex = nextIndex;
+					}
+				}
+			}
+			repaint();
+		});
+		timer.start();
+	}
     }
 
     // =================== paintComponent ===================
@@ -216,6 +228,38 @@ public class MultiSvgAnimationApp extends JPanel {
             }
         });
     }
+
+	public void loadNewScene(String[] newFiles) {
+		// หยุด Timer เก่า
+		if (timer != null) timer.stop();
+		
+		// เคลียร์ข้อมูลเก่า
+		frames.clear();
+		names.clear();
+		backgrounds.clear();
+		currentIndex = 0;
+		frameCounter = 0;
+		lastW = -1;
+		
+		// โหลดไฟล์ใหม่
+		for (String filePath : newFiles) {
+			Path2D path = SvgLoader.loadSvg(filePath);
+			if (path != null) {
+				FrameData fd = new FrameData(path);
+				// ใส่ Drawable สำหรับฉากใหม่นี้ (อาจต่างจากเก่า)
+				fd.drawables.add(new WallClockDrawable(92, 70, 0.25));
+				// ... เพิ่มของใหม่ตามต้องการ
+				frames.add(fd);
+				names.add(new File(filePath).getName());
+			}
+		}
+		
+		// เริ่ม Timer ใหม่
+		if (!frames.isEmpty()) {
+			timer.start();
+		}
+		repaint();
+	}
 
     // =================== main ===================
     public static void main(String[] args) {

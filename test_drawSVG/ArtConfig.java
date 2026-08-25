@@ -21,6 +21,11 @@ public final class ArtConfig {
         "test_drawSVG/b3.svg"
     };
 
+	public static final String[] SCENE_2_FILES = {
+		"test_drawSVG/c1.svg",
+		"test_drawSVG/c2.svg",
+	};
+
     public static final int FRAME_INTERVAL = 350; // ms ต่อเฟรม
     public static final int TICK_INTERVAL = 30;   // ms ต่อการวาด
 
