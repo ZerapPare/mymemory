@@ -68,6 +68,32 @@ public class MultiSvgAnimationApp extends JPanel {
         new Seed(404.5, 294.9, SCREEN), // b3 (ภาพเดียวกับ a3)
     };
 
+    /**
+     * เส้นดำที่เราลากเพิ่มเองเพื่ออุดช่องที่ลายเส้นต้นฉบับเปิดค้างไว้
+     * แต่ละแถวคือ {x1, y1, x2, y2} หน่วย viewBox เหมือน Seed
+     *
+     * ที่ต้องมีเพราะขอบโต๊ะใน SVG จบกลางอากาศ ไม่ได้ลากถึงขอบภาพ พื้นที่โต๊ะ
+     * กับพื้นหลังจึงทะลุถึงกัน เทสีโต๊ะทีเดียวสีท่วมทั้งจอ ลากเส้นปิดปลายที่
+     * เปิดอยู่ก็แยกสองบริเวณออกจากกันได้
+     *
+     * ปลายเส้นเลยขอบ viewBox ได้ (ค่าติดลบ หรือเกิน 600/384) Java2D ตัดให้เอง
+     * ซึ่งดีกว่าหยุดพอดีขอบ เพราะจะได้ไม่เหลือรูที่มุม
+     */
+    private static final double[][] DAMS = {
+        { 149.4, 355.4, -37.4, 456.5 },
+        {485.1, 238.3, 623.4, 257.2} // ปิดขอบโต๊ะด้านซ้ายล่าง
+    };
+
+    /**
+     * ความหนาเส้นอุด หน่วย viewBox (จะถูกคูณสเกลตามขนาดหน้าต่างให้เอง)
+     *
+     * แยกจากความหนาเส้นขอบของภาพ เพราะถ้าไปเพิ่มตรงนั้นลายเส้นการ์ตูนจะหนาตาม
+     * ไปด้วยทั้งรูป ค่า 1 พอกั้นได้อยู่แล้ว (flood fill เป็นแบบ 4 ทิศ ผ่านเส้น
+     * ทแยงหนา 1 พิกเซลไม่ได้) เพิ่มเป็น 2-3 เมื่อปลายเส้นไม่ได้แตะเส้นหมึกเดิม
+     * พอดีเป๊ะ จะได้ไม่เหลือรูตรงรอยต่อ
+     */
+    private static final double DAM_WIDTH = 1.0;
+
     /** เทสีลงเฉพาะพิกเซลขาวล้วน เส้นหมึกและสีที่เทไปแล้วกั้นอยู่ */
     private static final int BLANK = 0xFFFFFF;
 
@@ -297,6 +323,21 @@ public class MultiSvgAnimationApp extends JPanel {
         // ลากขอบทับไม่ใช่การตกแต่ง แต่เป็นการอุดรู เส้น potrace เป็นสลิ่วบางที่
         // แค่แตะกัน ถมอย่างเดียวเหลือรูจิ๋วให้สีลอดทะลุไปบริเวณข้างเคียง
         g.draw(sh);
+
+        // เส้นอุดที่เราวาดเพิ่มเอง ต้องมาก่อน flood fill ถึงจะทำหน้าที่เป็นกำแพงได้
+        // คูณสเกลด้วย เส้นจะได้หนาเท่ากันเมื่อเทียบกับรูป ไม่ว่าหน้าต่างขนาดไหน
+        g.setStroke(new BasicStroke((float) Math.max(3, DAM_WIDTH * s(at)),
+                BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        Point2D.Double p1 = new Point2D.Double();
+        Point2D.Double p2 = new Point2D.Double();
+        for (double[] d : DAMS) {
+            p1.setLocation(d[0], d[1]);
+            p2.setLocation(d[2], d[3]);
+            at.transform(p1, p1);
+            at.transform(p2, p2);
+            g.drawLine((int) Math.round(p1.x), (int) Math.round(p1.y),
+                       (int) Math.round(p2.x), (int) Math.round(p2.y));
+        }
         g.dispose();
 
         if (!colorOn) return img;
