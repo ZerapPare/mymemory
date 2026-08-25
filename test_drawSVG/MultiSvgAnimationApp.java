@@ -52,7 +52,9 @@ public class MultiSvgAnimationApp extends JPanel {
                 FrameData fd = new FrameData(path);
                 // ***** เพิ่ม Drawable ต่าง ๆ ลงในเฟรมนี้ *****
                 fd.drawables.add(new WallClockDrawable(92, 70, 0.25));
-                fd.drawables.add(new WindowBackgroundDrawable());
+
+				fd.drawables.add(new DeskDecorDrawable());
+				fd.drawables.add(new WindowBackgroundDrawable());
                 // ชั้นวางต้นไม้ใต้นาฬิกา (กึ่งกลาง x, ระดับแผ่นชั้น, สเกล)
                 fd.drawables.add(new PlantShelfDrawable(92, 180, 1.0));
 
