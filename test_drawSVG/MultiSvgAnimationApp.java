@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
@@ -16,111 +17,101 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+// ============================================================
+//  1. Interface Drawable (ถ้าแยกไฟล์ -> Drawable.java)
+// ============================================================
+interface Drawable {
+    void draw(Graphics2D g, double time);
+}
+
+// ============================================================
+//  5. คลาสหลัก MultiSvgAnimationApp (JPanel)
+// ============================================================
 public class MultiSvgAnimationApp extends JPanel {
-    private final List<Path2D> frames = new ArrayList<>();
+
+    // ----- ข้อมูลของแต่ละเฟรม (SVG + Drawable objects) -----
+    private static class FrameData {
+        Path2D svgPath;
+        List<Drawable> drawables = new ArrayList<>();
+        FrameData(Path2D path) {
+            this.svgPath = path;
+        }
+    }
+
+    private final List<FrameData> frames = new ArrayList<>();
     private int currentIndex = 0;
 
-    // ============ THE PALETTE - เปลี่ยนสีที่นี่ที่เดียว ============
-    // ตารางข้างล่างบอกแค่ว่าสี "ไปลงตรงไหน" ไม่ได้บอกว่าเป็นสีอะไร
+    // ------ สีที่ใช้ใน SVG (เหมือนเดิม) ------
     private static final Color BACKDROP = new Color(0xF2E4CB);
     private static final Color HAIR     = new Color(0x6B4A2E);
     private static final Color SKIN     = new Color(0xFFDCB8);
     private static final Color SHIRT    = new Color(0x7FA8D4);
     private static final Color SCREEN   = new Color(0xDCEBFF);
-    // ============================================================
 
-    /** จุดเริ่มเทสีหนึ่งจุด พิกัดเป็นหน่วย viewBox (0..600 x 0..384) ไม่ใช่พิกเซลจอ */
     private static class Seed {
         final double x, y;
         final Color color;
         Seed(double x, double y, Color color) { this.x = x; this.y = y; this.color = color; }
     }
 
-    /**
-     * พิกัดพวกนี้วัดมาจากภาพที่เรนเดอร์จริง ไม่ได้เดา - label ช่องว่างทุกก้อนแล้ว
-     * ใช้กึ่งกลางของแถวที่กว้างที่สุดของแต่ละก้อน (ไม่ใช่ centroid เพราะบริเวณ
-     * เว้าอย่างแขนจะทำให้ centroid หลุดออกไปนอกรูป)
-     *
-     * ทั้ง 6 ไฟล์เป็นภาพต่างกันจริงแค่ 3 แบบ (a1=b1, a2=b2, a3=b3) และมีแต่
-     * แท็บเล็ตที่ขยับ ส่วนอื่นอยู่ที่เดิมทุกเฟรม จึงแยกเป็นสองตาราง
-     */
     private static final Seed[] COMMON = {
-        new Seed( 30.0,  30.0, BACKDROP), // พื้นหลัง - รวมโต๊ะด้วย เพราะเส้นขอบโต๊ะไม่ปิด
-        new Seed(229.8, 207.6, SHIRT),    // ลำตัว
-        new Seed(301.0,  75.5, HAIR),     // ผม
-        new Seed(325.2, 111.1, SKIN),     // ใบหน้า
-        new Seed(294.4, 142.0, SKIN),     // ใบหน้า
-        new Seed(350.3, 243.5, SHIRT),     // ท่อนแขน
-        new Seed(306.4, 200.0, SKIN),     // มือที่คาง
-        new Seed(333.5, 210.4, SKIN),     // มือที่คาง
+        new Seed( 30.0,  30.0, BACKDROP),
+        new Seed(229.8, 207.6, SHIRT),
+        new Seed(301.0,  75.5, HAIR),
+        new Seed(325.2, 111.1, SKIN),
+        new Seed(294.4, 142.0, SKIN),
+        new Seed(350.3, 243.5, SHIRT),
+        new Seed(306.4, 200.0, SKIN),
+        new Seed(333.5, 210.4, SKIN),
         new Seed(327.9, 175.8, SKIN),
-
-
     };
 
-    /** แท็บเล็ตเป็นอย่างเดียวที่ขยับ เลยต้องมี seed ต่อเฟรม */
     private static final Seed[] SCREEN_PER_FRAME = {
-        new Seed(411.7, 289.3, SCREEN), // a1
-        new Seed(365.4, 323.6, SCREEN), // a2
-        new Seed(404.5, 294.9, SCREEN), // a3
-        new Seed(411.7, 289.3, SCREEN), // b1 (ภาพเดียวกับ a1)
-        new Seed(365.4, 323.6, SCREEN), // b2 (ภาพเดียวกับ a2)
-        new Seed(404.5, 294.9, SCREEN), // b3 (ภาพเดียวกับ a3)
+        new Seed(411.7, 289.3, SCREEN),
+        new Seed(365.4, 323.6, SCREEN),
+        new Seed(404.5, 294.9, SCREEN),
+        new Seed(411.7, 289.3, SCREEN),
+        new Seed(365.4, 323.6, SCREEN),
+        new Seed(404.5, 294.9, SCREEN),
     };
 
-    /**
-     * เส้นดำที่เราลากเพิ่มเองเพื่ออุดช่องที่ลายเส้นต้นฉบับเปิดค้างไว้
-     * แต่ละแถวคือ {x1, y1, x2, y2} หน่วย viewBox เหมือน Seed
-     *
-     * ที่ต้องมีเพราะขอบโต๊ะใน SVG จบกลางอากาศ ไม่ได้ลากถึงขอบภาพ พื้นที่โต๊ะ
-     * กับพื้นหลังจึงทะลุถึงกัน เทสีโต๊ะทีเดียวสีท่วมทั้งจอ ลากเส้นปิดปลายที่
-     * เปิดอยู่ก็แยกสองบริเวณออกจากกันได้
-     *
-     * ปลายเส้นเลยขอบ viewBox ได้ (ค่าติดลบ หรือเกิน 600/384) Java2D ตัดให้เอง
-     * ซึ่งดีกว่าหยุดพอดีขอบ เพราะจะได้ไม่เหลือรูที่มุม
-     */
     private static final double[][] DAMS = {
         { 149.4, 355.4, -37.4, 456.5 },
-        {485.1, 238.3, 623.4, 257.2} // ปิดขอบโต๊ะด้านซ้ายล่าง
+        {485.1, 238.3, 623.4, 257.2}
     };
-
-    /**
-     * ความหนาเส้นอุด หน่วย viewBox (จะถูกคูณสเกลตามขนาดหน้าต่างให้เอง)
-     *
-     * แยกจากความหนาเส้นขอบของภาพ เพราะถ้าไปเพิ่มตรงนั้นลายเส้นการ์ตูนจะหนาตาม
-     * ไปด้วยทั้งรูป ค่า 1 พอกั้นได้อยู่แล้ว (flood fill เป็นแบบ 4 ทิศ ผ่านเส้น
-     * ทแยงหนา 1 พิกเซลไม่ได้) เพิ่มเป็น 2-3 เมื่อปลายเส้นไม่ได้แตะเส้นหมึกเดิม
-     * พอดีเป๊ะ จะได้ไม่เหลือรูตรงรอยต่อ
-     */
     private static final double DAM_WIDTH = 1.0;
-
-    /** เทสีลงเฉพาะพิกเซลขาวล้วน เส้นหมึกและสีที่เทไปแล้วกั้นอยู่ */
     private static final int BLANK = 0xFFFFFF;
-
-    /**
-     * ทุกเฟรมใช้กรอบนี้ร่วมกัน ไม่ใช้ bounds ของแต่ละเฟรม - ไม่งั้นตัวการ์ตูน
-     * จะเต้นตอนสลับ และ seed ที่วัดไว้จะเลื่อนตามไปด้วย
-     * (a1/b1 เป็น 600x383 ที่เหลือ 600x384 ต่างกัน 0.26% ใช้ค่าเดียวได้)
-     */
     private static final double VBW = 600, VBH = 384, PAD = 24;
 
-    private final List<BufferedImage> buffers = new ArrayList<>();
+    // ---- พื้นหลังที่เรนเดอร์แล้ว (Cache) ----
+    private final List<BufferedImage> backgrounds = new ArrayList<>();
     private int lastW = -1, lastH = -1;
     private boolean colorOn = true;
 
-    /** ชื่อสั้นของแต่ละเฟรม (a1, a2, ...) ไว้โชว์บนจอตอนเก็บพิกัด */
     private final List<String> names = new ArrayList<>();
+
+    // ---- Timer สำหรับเปลี่ยนเฟรมและรีเฟรช ----
     private Timer timer;
     private boolean paused = false;
+    private int frameCounter = 0;        // นับจำนวน tick
+    private static final int FRAME_INTERVAL = 350; // ms ต่อเฟรม
+    private static final int TICK_INTERVAL = 30;   // ms ต่อการวาด
 
-    /** ข้อความจากการคลิกครั้งล่าสุด โชว์บนจอเพื่อไม่ต้องคอยมองคอนโซล */
     private String pickText = "click to pick a point";
 
+    // =================== Constructor ===================
     public MultiSvgAnimationApp(String[] filePaths) {
         for (String filePath : filePaths) {
             Path2D path = loadSvg(filePath);
             if (path != null) {
-                frames.add(path);
+                FrameData fd = new FrameData(path);
+                // ***** เพิ่ม Drawable ต่าง ๆ ลงในเฟรมนี้ *****
+                // ตัวอย่าง: เพิ่มนาฬิกาที่ตำแหน่ง (300,92) ความเร็ว 1 รอบ/วินาที
+                fd.drawables.add(new WallClockDrawable(300, 92, 1.0));
+                // สามารถเพิ่ม object อื่น ๆ ได้อีก เช่น
+                // fd.drawables.add(new AnotherDrawable(...));
+                // ------------------------------------------
+                frames.add(fd);
                 String n = new File(filePath).getName();
                 names.add(n.endsWith(".svg") ? n.substring(0, n.length() - 4) : n);
             }
@@ -132,21 +123,22 @@ public class MultiSvgAnimationApp extends JPanel {
         installPicker();
 
         if (!frames.isEmpty()) {
-            timer = new Timer(350, e -> {
-                currentIndex = (currentIndex + 1) % frames.size();
+            timer = new Timer(TICK_INTERVAL, e -> {
+                // เปลี่ยนเฟรมตามเวลา
+                if (!paused) {
+                    frameCounter += TICK_INTERVAL;
+                    if (frameCounter >= FRAME_INTERVAL) {
+                        frameCounter = 0;
+                        currentIndex = (currentIndex + 1) % frames.size();
+                    }
+                }
                 repaint();
             });
             timer.start();
         }
     }
 
-    /**
-     * คลิกแล้วบอกพิกัดในหน่วย viewBox พร้อมสีที่จุดนั้น และพิมพ์บรรทัด
-     * new Seed(...) สำเร็จรูปให้คัดลอกไปวางในตารางข้างบนได้เลย
-     *
-     * เก็บพิกัดในหน่วย viewBox ไม่ใช่พิกเซลจอ เพราะพิกเซลจอเปลี่ยนตามขนาด
-     * หน้าต่าง แต่ viewBox คงที่เสมอ
-     */
+    // =================== Picker (คลิกหาพิกัด) ===================
     private void installPicker() {
         addMouseListener(new MouseAdapter() {
             @Override
@@ -166,8 +158,8 @@ public class MultiSvgAnimationApp extends JPanel {
 
         String frame = currentIndex < names.size() ? names.get(currentIndex) : "?";
         String what = "out";
-        if (currentIndex < buffers.size() && px >= 0 && px < w && py >= 0 && py < h) {
-            int rgb = buffers.get(currentIndex).getRGB(px, py) & 0xFFFFFF;
+        if (currentIndex < backgrounds.size() && px >= 0 && px < w && py >= 0 && py < h) {
+            int rgb = backgrounds.get(currentIndex).getRGB(px, py) & 0xFFFFFF;
             what = describe(rgb);
         }
 
@@ -177,7 +169,6 @@ public class MultiSvgAnimationApp extends JPanel {
         repaint();
     }
 
-    /** บอกว่าพิกเซลนั้นคืออะไร จะได้รู้ว่าคลิกโดนเส้นหรือโดนช่องว่าง */
     private static String describe(int rgb) {
         if (rgb == 0x000000) return "black";
         if (rgb == BLANK) return "blank";
@@ -189,11 +180,7 @@ public class MultiSvgAnimationApp extends JPanel {
         return String.format("#%06X", rgb);
     }
 
-    /**
-     * SPACE หยุด/เล่น (ต้องหยุดก่อนถึงจะคลิกเก็บพิกัดทัน)
-     * LEFT/RIGHT เดินเฟรมทีละภาพ
-     * C สลับเปิด/ปิดสี ไว้เทียบกับลายเส้นเปล่า
-     */
+    // =================== Key bindings ===================
     private void installKeys() {
         bind("SPACE", () -> {
             paused = !paused;
@@ -205,11 +192,10 @@ public class MultiSvgAnimationApp extends JPanel {
         bind("RIGHT", () -> step(1));
         bind("C", () -> {
             colorOn = !colorOn;
-            lastW = -1; // บังคับให้สร้างภาพใหม่ทุกเฟรม
+            lastW = -1; // บังคับสร้างพื้นหลังใหม่
         });
     }
 
-    /** เดินเฟรมด้วยมือ - หยุด timer ให้อัตโนมัติ ไม่งั้นมันแย่งเปลี่ยนเฟรม */
     private void step(int d) {
         if (frames.isEmpty()) return;
         if (!paused) {
@@ -217,6 +203,8 @@ public class MultiSvgAnimationApp extends JPanel {
             if (timer != null) timer.stop();
         }
         currentIndex = (currentIndex + d + frames.size()) % frames.size();
+        frameCounter = 0; // รีเซ็ตตัวนับเวลา
+        repaint();
     }
 
     private void bind(String key, Runnable action) {
@@ -230,6 +218,7 @@ public class MultiSvgAnimationApp extends JPanel {
         });
     }
 
+    // =================== โหลด SVG ===================
     private Path2D loadSvg(String fileName) {
         File file = new File(fileName);
         if (!file.exists()) return null;
@@ -256,16 +245,31 @@ public class MultiSvgAnimationApp extends JPanel {
         return targetPath;
     }
 
+    // =================== paintComponent ===================
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         if (frames.isEmpty()) return;
 
-        ensureFrames(getWidth(), getHeight());
-        if (currentIndex < buffers.size()) {
-            g.drawImage(buffers.get(currentIndex), 0, 0, null);
+        Graphics2D g2 = (Graphics2D) g;
+
+        // 1. สร้างพื้นหลัง (Cache) ถ้าขนาดหน้าต่างเปลี่ยน
+        ensureBackgrounds(getWidth(), getHeight());
+
+        // 2. วาดพื้นหลัง (SVG ที่ใส่สีแล้ว)
+        if (currentIndex < backgrounds.size()) {
+            g.drawImage(backgrounds.get(currentIndex), 0, 0, null);
         }
-        drawHud((Graphics2D) g);
+
+        // 3. วาด Drawable Objects ของเฟรมปัจจุบัน
+        FrameData fd = frames.get(currentIndex);
+        double time = System.currentTimeMillis() / 1000.0; // เวลาจริงเป็นวินาที
+        for (Drawable d : fd.drawables) {
+            d.draw(g2, time);
+        }
+
+        // 4. วาด HUD
+        drawHud(g2);
     }
 
     private void drawHud(Graphics2D g) {
@@ -281,15 +285,9 @@ public class MultiSvgAnimationApp extends JPanel {
         g.drawString(pickText, 10, 34);
     }
 
-    /**
-     * สร้างภาพทุกเฟรมไว้ล่วงหน้าหนึ่งครั้งต่อขนาดหน้าต่าง
-     *
-     * ที่ต้องวาดลง BufferedImage ไม่ใช่วาดลงจอตรงๆ เพราะ flood fill ต้อง "อ่าน"
-     * พิกเซลกลับมา ซึ่ง Graphics2D ของ panel ทำไม่ได้ ผลพลอยได้คือสลับเฟรม
-     * เหลือแค่ blit ภาพเดียว
-     */
-    private void ensureFrames(int w, int h) {
-        if (w <= 0 || h <= 0 || (w == lastW && h == lastH && !buffers.isEmpty())) return;
+    // =================== สร้างพื้นหลัง (Cache) ===================
+    private void ensureBackgrounds(int w, int h) {
+        if (w <= 0 || h <= 0 || (w == lastW && h == lastH && !backgrounds.isEmpty())) return;
 
         double s = Math.min(Math.max(1, w - 2 * PAD) / VBW, Math.max(1, h - 2 * PAD) / VBH);
         AffineTransform at = new AffineTransform();
@@ -297,35 +295,30 @@ public class MultiSvgAnimationApp extends JPanel {
         at.scale(s, s);
         at.translate(-VBW / 2, -VBH / 2);
 
-        buffers.clear();
+        backgrounds.clear();
         for (int i = 0; i < frames.size(); i++) {
-            buffers.add(rasterise(frames.get(i), i, at, w, h));
+            backgrounds.add(rasteriseBackground(frames.get(i).svgPath, i, at, w, h));
         }
         lastW = w;
         lastH = h;
     }
 
-    /** วาดลายเส้นลงภาพ แล้วเทสีทีละ seed */
-    private BufferedImage rasterise(Path2D path, int frameIndex, AffineTransform at, int w, int h) {
+    /** วาดเฉพาะพื้นหลัง (SVG + flood fill) ไม่รวม Drawable */
+    private BufferedImage rasteriseBackground(Path2D path, int frameIndex, AffineTransform at, int w, int h) {
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = img.createGraphics();
         g.setColor(Color.WHITE);
         g.fillRect(0, 0, w, h);
 
-        // ปิด AA ไม่ใช่เรื่องความสวย แต่เพราะ flood fill ต้องการขอบคมชัด
-        // ถ้าเปิด ขอบหมึกจะเป็นเทาไล่เฉด สีจะหยุดก่อนถึงเส้นแล้วเหลือขอบขาวซีด
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
         g.setStroke(new BasicStroke(1f));
         g.setColor(Color.BLACK);
 
         Shape sh = at.createTransformedShape(path);
         g.fill(sh);
-        // ลากขอบทับไม่ใช่การตกแต่ง แต่เป็นการอุดรู เส้น potrace เป็นสลิ่วบางที่
-        // แค่แตะกัน ถมอย่างเดียวเหลือรูจิ๋วให้สีลอดทะลุไปบริเวณข้างเคียง
         g.draw(sh);
 
-        // เส้นอุดที่เราวาดเพิ่มเอง ต้องมาก่อน flood fill ถึงจะทำหน้าที่เป็นกำแพงได้
-        // คูณสเกลด้วย เส้นจะได้หนาเท่ากันเมื่อเทียบกับรูป ไม่ว่าหน้าต่างขนาดไหน
+        // เส้นอุด (DAMS)
         g.setStroke(new BasicStroke((float) Math.max(3, DAM_WIDTH * s(at)),
                 BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         Point2D.Double p1 = new Point2D.Double();
@@ -343,10 +336,6 @@ public class MultiSvgAnimationApp extends JPanel {
         if (!colorOn) return img;
 
         int[] px = ((DataBufferInt) img.getRaster().getDataBuffer()).getData();
-
-        // seed ที่วัดไว้ที่ขนาดหนึ่ง อาจไปตกใต้เส้นที่อีกขนาดเพราะเส้นขยับตาม
-        // สเกล ให้ขยับหาพิกเซลว่างใกล้สุดได้ 1.5 หน่วย viewBox ซึ่งแคบกว่า
-        // ระยะระหว่างบริเวณมาก จึงข้ามเส้นไปผิดฝั่งไม่ได้
         int radius = Math.max(2, (int) Math.round(1.5 * s(at)));
 
         List<Seed> seeds = new ArrayList<>(Arrays.asList(COMMON));
@@ -364,8 +353,6 @@ public class MultiSvgAnimationApp extends JPanel {
             if (start >= 0) {
                 floodFill(px, w, h, start % w, start / w, want);
             } else if (!hasColourNear(px, w, h, sx, sy, radius, want)) {
-                // ไม่มีที่ให้เท และสีที่อยู่ตรงนั้นก็ผิด แปลว่าบริเวณนี้รวมเข้ากับ
-                // เพื่อนบ้านคนละสี ถ้าสีตรงกันถือว่าไม่เป็นไร จึงเตือนเฉพาะกรณีผิด
                 System.err.println("[seed] (" + seed.x + ", " + seed.y + ") ที่ " + w + "x" + h
                         + " - บริเวณรวมกับเพื่อนบ้านคนละสี");
             }
@@ -377,14 +364,7 @@ public class MultiSvgAnimationApp extends JPanel {
         return at.getScaleX();
     }
 
-    /**
-     * flood fill แบบ span 4 ทิศ
-     *
-     * ใช้ 4 ทิศไม่ใช่ 8 เพื่อไม่ให้สีเล็ดลอดตามแนวทแยงระหว่างพิกเซลหมึกสองตัว
-     * ที่แตะกันแค่มุมเดียว เติมทั้งแถวรวดเดียวแล้ว push แค่จุดเดียวต่อแถวใหม่
-     * สแต็กเลยอยู่ระดับร้อย ไม่ใช่หนึ่งช่องต่อพิกเซล - บริเวณเดียวที่นี่อาจ
-     * ใหญ่เกือบเต็มจอ ถ้าใช้ recursion จะ StackOverflow
-     */
+    // =================== Flood Fill (เหมือนเดิม) ===================
     private static void floodFill(int[] px, int w, int h, int sx, int sy, int rgb) {
         int fill = rgb & 0xFFFFFF;
         if (fill == BLANK || (px[sy * w + sx] & 0xFFFFFF) != BLANK) return;
@@ -395,7 +375,7 @@ public class MultiSvgAnimationApp extends JPanel {
 
         while (sp > 0) {
             int p = stack[--sp];
-            if ((px[p] & 0xFFFFFF) != BLANK) continue; // แถวก่อนหน้าเติมไปแล้ว
+            if ((px[p] & 0xFFFFFF) != BLANK) continue;
             int y = p / w, row = y * w;
 
             int left = p - row;
@@ -424,16 +404,11 @@ public class MultiSvgAnimationApp extends JPanel {
         }
     }
 
-    /**
-     * พิกเซลว่างที่ใกล้ seed ที่สุด ไล่หาเป็นวงทีละชั้น บริเวณที่เทสีไปแล้ว
-     * ไม่นับว่าว่าง การขยับจึงไปแย่งสีของเพื่อนบ้านไม่ได้ อย่างแย่ที่สุดคือ
-     * หาไม่เจอแล้วฟ้อง
-     */
     private static int findBlankNear(int[] px, int w, int h, int sx, int sy, int maxR) {
         for (int r = 0; r <= maxR; r++) {
             for (int dy = -r; dy <= r; dy++) {
                 for (int dx = -r; dx <= r; dx++) {
-                    if (r > 0 && Math.abs(dx) != r && Math.abs(dy) != r) continue; // เอาเฉพาะขอบวง
+                    if (r > 0 && Math.abs(dx) != r && Math.abs(dy) != r) continue;
                     int x = sx + dx, y = sy + dy;
                     if (x >= 0 && x < w && y >= 0 && y < h && (px[y * w + x] & 0xFFFFFF) == BLANK) {
                         return y * w + x;
@@ -444,7 +419,6 @@ public class MultiSvgAnimationApp extends JPanel {
         return -1;
     }
 
-    /** มีพิกเซลในรัศมีที่เป็นสีที่ seed นี้ต้องการอยู่แล้วหรือไม่ */
     private static boolean hasColourNear(int[] px, int w, int h, int sx, int sy, int maxR, int rgb) {
         for (int y = Math.max(0, sy - maxR); y <= Math.min(h - 1, sy + maxR); y++) {
             for (int x = Math.max(0, sx - maxR); x <= Math.min(w - 1, sx + maxR); x++) {
@@ -454,6 +428,7 @@ public class MultiSvgAnimationApp extends JPanel {
         return false;
     }
 
+    // =================== SVG Path Parser (เหมือนเดิม) ===================
     private Path2D parseSvgPath(String d) {
         Path2D.Double path = new Path2D.Double();
         Pattern p = Pattern.compile("([a-zA-Z])|([-+]?\\d*\\.?\\d+(?:[eE][-+]?\\d+)?)");
@@ -461,6 +436,7 @@ public class MultiSvgAnimationApp extends JPanel {
 
         String cmd = "";
         double startX = 0, startY = 0;
+        double curX = 0, curY = 0;
 
         while (m.find()) {
             String token = m.group();
@@ -487,9 +463,8 @@ public class MultiSvgAnimationApp extends JPanel {
                             double x = Double.parseDouble(token); m.find();
                             double y = Double.parseDouble(m.group());
                             if (isRel) { x += curX; y += curY; }
-                            
-                            // ส่ง path เข้าไปบันทึกจุด
-                            customLineTo(path, x, y); 
+                            customLineTo(path, x, y, curX, curY);
+                            curX = x; curY = y;
                             break;
                         }
                         case "C": {
@@ -499,9 +474,8 @@ public class MultiSvgAnimationApp extends JPanel {
                             if (isRel) {
                                 x1 += curX; y1 += curY; x2 += curX; y2 += curY; x3 += curX; y3 += curY;
                             }
-                            
-                            // ส่ง path เข้าไปบันทึกจุด
-                            customCurveTo(path, x1, y1, x2, y2, x3, y3); 
+                            customCurveTo(path, x1, y1, x2, y2, x3, y3, curX, curY);
+                            curX = x3; curY = y3;
                             break;
                         }
                     }
@@ -511,53 +485,29 @@ public class MultiSvgAnimationApp extends JPanel {
         return path;
     }
 
-    private double curX = 0;
-    private double curY = 0;
-
-    /**
-     * คำนวณจุดตามแนวเส้นตรง แล้วใส่ลงใน Path2D
-     */
-    public void customLineTo(Path2D.Double path, double targetX, double targetY) {
+    private void customLineTo(Path2D.Double path, double targetX, double targetY, double curX, double curY) {
         double distance = Math.hypot(targetX - curX, targetY - curY);
         int steps = Math.max((int) distance, 1);
-
         for (int i = 1; i <= steps; i++) {
             double t = (double) i / steps;
             double x = (1 - t) * curX + t * targetX;
             double y = (1 - t) * curY + t * targetY;
-            
             path.lineTo(x, y);
         }
-
-        curX = targetX;
-        curY = targetY;
     }
 
-    /**
-     * คำนวณจุดตามสูตร Cubic Bézier แล้วใส่ลงใน Path2D
-     */
-    public void customCurveTo(Path2D.Double path, double x1, double y1, double x2, double y2, double x3, double y3) {
-        int steps = 30; // 30-50 steps เพียงพอต่อความเนียนและประหยัด RAM
-        double x0 = curX;
-        double y0 = curY;
-
+    private void customCurveTo(Path2D.Double path, double x1, double y1, double x2, double y2, double x3, double y3, double curX, double curY) {
+        int steps = 30;
+        double x0 = curX, y0 = curY;
         for (int i = 1; i <= steps; i++) {
             double t = (double) i / steps;
             double u = 1 - t;
-
-            double tt = t * t;
-            double uu = u * u;
-            double uuu = uu * u;
-            double ttt = tt * t;
-
+            double tt = t * t, uu = u * u;
+            double uuu = uu * u, ttt = tt * t;
             double x = uuu * x0 + 3 * uu * t * x1 + 3 * u * tt * x2 + ttt * x3;
             double y = uuu * y0 + 3 * uu * t * y1 + 3 * u * tt * y2 + ttt * y3;
-
             path.lineTo(x, y);
         }
-
-        curX = x3;
-        curY = y3;
     }
 
     private AffineTransform parseGroupTransform(String content) {
@@ -579,17 +529,18 @@ public class MultiSvgAnimationApp extends JPanel {
         return tx;
     }
 
+    // =================== main ===================
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Multi-Frame SVG Switch");
+            JFrame frame = new JFrame("Multi-Frame SVG with Drawable Objects");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
             String[] files = {
-                "test_drawSVG/a1.svg", 
-                "test_drawSVG/a2.svg", 
-                "test_drawSVG/a3.svg", 
-                "test_drawSVG/b1.svg", 
-                "test_drawSVG/b2.svg", 
+                "test_drawSVG/a1.svg",
+                "test_drawSVG/a2.svg",
+                "test_drawSVG/a3.svg",
+                "test_drawSVG/b1.svg",
+                "test_drawSVG/b2.svg",
                 "test_drawSVG/b3.svg"
             };
 
