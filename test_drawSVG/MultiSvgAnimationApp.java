@@ -48,9 +48,14 @@ public class MultiSvgAnimationApp extends JPanel {
         new Seed( 30.0,  30.0, BACKDROP), // พื้นหลัง - รวมโต๊ะด้วย เพราะเส้นขอบโต๊ะไม่ปิด
         new Seed(229.8, 207.6, SHIRT),    // ลำตัว
         new Seed(301.0,  75.5, HAIR),     // ผม
+        new Seed(325.2, 111.1, SKIN),     // ใบหน้า
         new Seed(294.4, 142.0, SKIN),     // ใบหน้า
-        new Seed(350.3, 243.5, SKIN),     // ท่อนแขน
+        new Seed(350.3, 243.5, SHIRT),     // ท่อนแขน
         new Seed(306.4, 200.0, SKIN),     // มือที่คาง
+        new Seed(333.5, 210.4, SKIN),     // มือที่คาง
+        new Seed(327.9, 175.8, SKIN),
+
+
     };
 
     /** แท็บเล็ตเป็นอย่างเดียวที่ขยับ เลยต้องมี seed ต่อเฟรม */
@@ -548,7 +553,7 @@ public class MultiSvgAnimationApp extends JPanel {
             };
 
             frame.add(new MultiSvgAnimationApp(files));
-            frame.setSize(800, 700);
+            frame.setSize(600, 600);
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
         });
