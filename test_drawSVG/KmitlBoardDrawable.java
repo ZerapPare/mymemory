@@ -23,17 +23,48 @@ public class KmitlBoardDrawable implements Drawable {
         }
     }
 
-    private final List<Element> elements = new ArrayList<>();
-    private final double startDelay;
-    private final double duration;
-    
-    // พิกัดจุดศูนย์กลางหน้าจอ ( viewBox คือ 600x384 -> ศูนย์กลางคือ 300, 192 )
-    private final double targetX = 300.0;
-    private final double targetY = 192.0;
+    /** ขนาดป้ายที่ scale 1 (พิกเซลจอ) วัดจากกึ่งกลางป้าย -> -250..250 x -180..180 */
+    private static final int BOARD_W = 500;
+    private static final int BOARD_H = 360;
+    private static final int BOARD_ARC = 30;
 
-    public KmitlBoardDrawable(double startDelay, double duration) {
+    /** จำนวนรอบที่หมุนตอนเข้า - ต้องเป็นจำนวนเต็ม ป้ายจะได้จบที่ 0 องศาพอดี */
+    private static final int SPIN_TURNS = 10;
+
+    private final List<Element> elements = new ArrayList<>();
+
+    // ช่วงเวลาของแต่ละเฟส (วินาที) นับต่อกันไปเรื่อยๆ จากตอนเริ่มซีน
+    private final double startDelay;   // รอ - ยังไม่วาด
+    private final double spinIn;       // หมุนเข้า scale 0 -> 1
+    private final double hold;         // หยุดนิ่งให้อ่านทัน
+    private final double zoomIn;       // พุ่งเข้าหาคนดูจนขาวเต็มจอ
+
+    /**
+     * จุดที่ป้ายจะไปหยุด = กึ่งกลาง panel จริง (พิกเซลจอ ไม่ใช่หน่วย viewBox)
+     * ค่าตั้งต้นเป็นกึ่งกลางหน้าต่างขนาดออกแบบ 600x600 เผื่อกรณียังไม่ได้เรียก setPanelSize
+     */
+    private double targetX = 300.0;
+    private double targetY = 300.0;
+
+    /** App เรียกก่อน draw ทุกเฟรม ป้ายจะได้อยู่กลางจอไม่ว่าย่อ/ขยายหน้าต่าง */
+    public void setPanelSize(int w, int h) {
+        if (w > 0) this.targetX = w / 2.0;
+        if (h > 0) this.targetY = h / 2.0;
+    }
+
+    /**
+     * เวลารวมทั้งอนิเมชัน (วินาที) - `ArtConfig.SCENE_DURATION` ของซีนนี้
+     * ต้องยาวอย่างน้อยเท่านี้ ไม่งั้นซีนจะตัดหนีไปก่อนป้ายจะขาวเต็มจอ
+     */
+    public double totalTime() {
+        return startDelay + spinIn + hold + zoomIn;
+    }
+
+    public KmitlBoardDrawable(double startDelay, double spinIn, double hold, double zoomIn) {
         this.startDelay = startDelay;
-        this.duration = duration;
+        this.spinIn = Math.max(0.001, spinIn);
+        this.hold = Math.max(0.0, hold);
+        this.zoomIn = Math.max(0.001, zoomIn);
 
         // 1. ตราสัญลักษณ์ KMITL
         elements.add(new Element(
@@ -58,7 +89,7 @@ public class KmitlBoardDrawable implements Drawable {
         // 3. ข้อความ 2
         elements.add(new Element(
                 "test_drawSVG/text2.svg",
-                -100, -20,
+                -110, 20,
                 0.45,
                 0,
                 Color.BLACK,
@@ -66,15 +97,51 @@ public class KmitlBoardDrawable implements Drawable {
         ));
     }
 
+    /** ออกตัวเร็วแล้วค่อยๆ นิ่ง - ใช้ตอนหมุนเข้า จะได้รู้สึกว่า "หยุด" จริง */
+    private static double easeOut(double p) {
+        return 1.0 - Math.pow(1.0 - p, 3);
+    }
+
+    /** ออกตัวช้าแล้วพุ่ง - ใช้ตอนซูมเข้าหาคนดู */
+    private static double easeIn(double p) {
+        return p * p * p;
+    }
+
+    /**
+     * สเกลที่ทำให้ป้ายกินพื้นที่เกิน panel ทุกด้าน (คูณ 2 เผื่อให้มุมโค้งหลุดออกนอกจอ)
+     * ที่สเกลนี้จอจะเป็นสีขาวล้วน ใช้กลบรอยตัดไปซีนถัดไป
+     */
+    private double coverScale() {
+        double panelW = targetX * 2.0;
+        double panelH = targetY * 2.0;
+        return 2.0 * Math.max(panelW / BOARD_W, panelH / BOARD_H);
+    }
+
     @Override
     public void draw(Graphics2D g2, double relativeTime) {
-        if (relativeTime < startDelay) return;
+        double t = relativeTime - startDelay;
+        if (t < 0) return;
 
-        double progress = Math.min(1.0, (relativeTime - startDelay) / duration);
-        
-        // หมุน 4 รอบ พร้อมขยายขนาด
-        double boardScale = progress; 
-        double boardRotation = Math.toRadians(360 * 10 * progress);
+        double boardScale;
+        double boardRotation = 0;
+        double zoomProgress = 0;
+
+        if (t < spinIn) {
+            // เฟส 1 หมุนเข้า - จบที่ scale 1 และ 0 องศาพอดี (SPIN_TURNS เป็นจำนวนเต็ม)
+            double p = easeOut(t / spinIn);
+            boardScale = p;
+            boardRotation = Math.toRadians(360.0 * SPIN_TURNS * p);
+        } else if (t < spinIn + hold) {
+            // เฟส 2 หยุดนิ่ง
+            boardScale = 1.0;
+        } else {
+            // เฟส 3 พุ่งเข้าหาคนดูจนขาวเต็มจอ แล้วค้างไว้ให้ซีนตัดทับ
+            zoomProgress = Math.min(1.0, (t - spinIn - hold) / zoomIn);
+            boardScale = 1.0 + (coverScale() - 1.0) * easeIn(zoomProgress);
+        }
+
+        // ปกติป้ายโปร่งนิดๆ (240) แต่ตอนพุ่งต้องทึบสนิทถึงจะกลบรอยตัดซีนได้
+        int boardAlpha = (int) Math.round(240 + 15 * zoomProgress);
 
         Graphics2D g = (Graphics2D) g2.create();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -84,12 +151,20 @@ public class KmitlBoardDrawable implements Drawable {
         g.scale(boardScale, boardScale);
         g.rotate(boardRotation);
 
-        g.setColor(new Color(255, 255, 255, 240));
-        g.fillRoundRect(-250, -180, 500, 360, 30, 30);
+        g.setColor(new Color(255, 255, 255, boardAlpha));
+        g.fillRoundRect(-BOARD_W / 2, -BOARD_H / 2, BOARD_W, BOARD_H, BOARD_ARC, BOARD_ARC);
         g.setColor(new Color(0xFF6600));
         g.setStroke(new BasicStroke(5.0f));
-        g.drawRoundRect(-250, -180, 500, 360, 30, 30);
-        
+        g.drawRoundRect(-BOARD_W / 2, -BOARD_H / 2, BOARD_W, BOARD_H, BOARD_ARC, BOARD_ARC);
+
+        // ตอนพุ่ง ตรากับข้อความขยายตามป้ายไปด้วย ถ้าไม่จางหายมันจะบังจนเต็มจอ
+        // แทนที่จะเหลือสีขาว - จางหมดตอนพุ่งไปได้ราวสองในสามของเฟส
+        float inkAlpha = (float) Math.max(0.0, 1.0 - zoomProgress * 1.5);
+        if (inkAlpha <= 0f) {
+            g.dispose();
+            return;
+        }
+        g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, inkAlpha));
 
         // ===================================================
         // วาด SVG แต่ละชิ้นโดยคำนวณจุดศูนย์กลางภาพให้อัตโนมัติ

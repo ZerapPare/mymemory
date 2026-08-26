@@ -137,7 +137,9 @@ public class MultiSvgAnimationApp extends JPanel {
 
         // -----------------------------------------------------------
         if (sceneIndex == 2) { 
-			this.zoomingOverlay = new KmitlBoardDrawable(2.5, 2.0);
+			// รอ 2.0 -> หมุนเข้า 1.5 -> หยุดนิ่ง 1.5 -> พุ่งเข้าหาคนดู 1.0 = 6.0 วิ
+			// ต้องเท่ากับ ArtConfig.SCENE_DURATION[2] เป๊ะ ซีนจะได้ตัดตอนจอขาวพอดี
+			this.zoomingOverlay = new KmitlBoardDrawable(2.0, 1.5, 1.5, 1.0);
 		} else {
 			this.zoomingOverlay = null;
 		}
@@ -190,6 +192,7 @@ public class MultiSvgAnimationApp extends JPanel {
 
         // 5. Render Component Overlay หมุนขยายทับข้างบน
         if (zoomingOverlay != null) {
+            zoomingOverlay.setPanelSize(getWidth(), getHeight());
             zoomingOverlay.draw(g2, time - sceneStartTime);
         }
 

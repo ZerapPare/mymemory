@@ -28,7 +28,8 @@ public final class ArtConfig {
     public static final Color SCREEN = new Color(0xDCEBFF);
     public static final Color MOUTH = new Color(0xFF788D);
     public static final Color TEAR = new Color(0x30AFFF);
-
+    public static final Color STAR = new Color(0xFFDA62);
+    
     /** จุดเริ่มเทสีหนึ่งจุด พิกัดเป็นหน่วย viewBox ไม่ใช่พิกเซลจอ */
     public static class Seed {
         public final double x, y;
@@ -92,6 +93,7 @@ public final class ArtConfig {
     private static final Seed[] SITTING = {
             new Seed(30.0, 30.0, BACKDROP),
             new Seed(317.8, 257.2, BACKDROP),
+            new Seed(342.4, 133.4, BACKDROP),
             new Seed(218.6, 413.4, TABLE),
             new Seed(229.8, 207.6, SHIRT),
             new Seed(301.0, 75.5, HAIR),
@@ -103,6 +105,7 @@ public final class ArtConfig {
             new Seed(327.9, 175.8, SKIN),
             new Seed(302.2, 162.4, SKIN),
             new Seed(315.6, 168.0, SKIN),
+            new Seed(324.5, 155.8, SKIN),
             new Seed(326.8, 178.1, SKIN),
             new Seed(355.8, 208.2, SHIRT),
             new Seed(298.9, 272.9, SHIRT),
@@ -110,7 +113,9 @@ public final class ArtConfig {
             new Seed(306.7, 110.0, SKIN),
             new Seed(267.7, 106.7, HAIR),
             new Seed(267.7, 105.6, HAIR),
+            new Seed(297.8, 131.2, SKIN),
             new Seed(281.0, 100.0, SKIN),
+            new Seed(330.1, 136.8, SKIN),
             new Seed(227.5, 166.9, INSIDESHIRT),
     };
 
@@ -141,16 +146,18 @@ public final class ArtConfig {
 
     private static final Seed[] SHOCKED = {
             new Seed(30.0, 30.0, BACKDROP),      // ผนัง
+            new Seed(341.3, 129.0, BACKDROP),
             new Seed(298.9, 451.8, TABLE),       // โต๊ะ - แยกจากผนังได้เพราะเส้นอุด
             new Seed(190.2, 192.0, SHIRT),       // ลำตัว
             // ดีเทลเสื้อ
             new Seed(150.6, 136.8, SHIRT),
             new Seed(185.1, 136.8, SHIRT),
             new Seed(165.1, 142.4, SHIRT),
-
             new Seed(371.7, 145.3, SHIRT),       // แขนขวาที่ยกขึ้น
             new Seed(297.8, 72.4, HAIR),         // ผม
+            new Seed(264.3, 105.6, HAIR),
             new Seed(265.2, 123.5, SKIN),        // ใบหน้า
+            new Seed(275.5, 98.9, SKIN),
             new Seed(306.5, 114.8, SKIN),        // ตา
             new Seed(81.5, 75.7, SKIN),          // กำปั้นซ้าย
             new Seed(458.7, 52.9, SKIN),         // กำปั้นขวา
@@ -163,11 +170,18 @@ public final class ArtConfig {
             new Seed(469.5, 34.2, SKIN),
             new Seed(480.7, 38.7, SKIN),
             new Seed(462.8, 34.2, SKIN),
+            //แว่น
+            new Seed(298.9, 125.6, SKIN),
+            new Seed(331.2, 126.8, SKIN),
+            new Seed(292.2, 120.1, SKIN),
             new Seed(293.3, 158.0, MOUTH),        // ปาก
             new Seed(290.0, 131.2, TEAR),
+            new Seed(335.7, 135.7, TEAR),
             new Seed(229.7, 163.6, INSIDESHIRT), // ข้างในเสื้อ
             new Seed(401.1, 293.1, SCREEN),      // จอแท็บเล็ต
             new Seed(400.0, 312.7, SCREEN),      // ไอคอนบนจอ
+            new Seed(360.2, 301.9, STAR),
+
     };
 
     /** ซีนนี้มีเฟรมเดียว ไม่มีอะไรขยับระหว่างเฟรม */
@@ -184,26 +198,38 @@ public final class ArtConfig {
 
     private static final Seed[] CELEBRATING = {
             new Seed(30.0, 30.0, BACKDROP), // ผนัง
+            new Seed(344.6, 131.2, BACKDROP),
             new Seed(298.9, 451.8, TABLE), // โต๊ะ - แยกจากผนังได้เพราะเส้นอุด
             new Seed(203.3, 302.9, SHIRT), // ลำตัว
+            new Seed(302.2, 275.1, SHIRT),
             new Seed(346.5, 247.0, SHIRT), // แขนเสื้อ
             new Seed(315.2, 262.7, SHIRT), // ข้อศอก
             new Seed(301.1, 75.7, HAIR), // ผม
             new Seed(293.5, 142.0, SKIN), // ใบหน้า
+            new Seed(306.7, 107.8, SKIN),
+            new Seed(330.1, 127.9, SKIN),
+            new Seed(278.8, 101.1, SKIN),
             new Seed(297.8, 117.0, SKIN), // หน้าผาก
             new Seed(303.8, 124.6, SKIN), // ตา
             new Seed(279.3, 176.8, SKIN), // มือที่คาง
-            new Seed(252.0, 160.0, SKIN), // คอ
-            new Seed(210.0, 146.0, INSIDESHIRT), // สายบ่า
-            new Seed(238.6, 177.9, INSIDESHIRT), // ปกเสื้อ
+            //บริเวณแขน
+            new Seed(392.6, 174.7, SKIN),
+            new Seed(371.4, 122.3, SKIN),
+            new Seed(330.1, 136.8, SKIN),
+            new Seed(389.2, 127.9, SKIN),
+            new Seed(296.7, 156.9, MOUTH),
+            new Seed(238.6, 177.9, INSIDESHIRT), // ในเสื้อ
+            new Seed(307.8, 172.5, INSIDESHIRT),
             new Seed(400.5, 292.5, SCREEN), // จอแท็บเล็ต
             new Seed(400.5, 311.0, SCREEN), // ไอคอนบนจอ
+            new Seed(360.2, 301.9, STAR),
+            new Seed(292.2, 130.1, TEAR),
     };
 
     /** กำปั้นที่ชูขึ้นขยับระหว่างเฟรม จึงต้องมี seed ต่อเฟรม */
     private static final Seed[] CELEBRATING_FISTS = {
-            new Seed(387.0, 132.2, SKIN), // c1
-            new Seed(402.2, 142.0, SKIN), // c2
+            // new Seed(387.0, 132.2, SKIN), // c1
+            // new Seed(402.2, 142.0, SKIN), // c2
     };
 
     public static final Scene SCENE_3 = new Scene("happy",
@@ -226,7 +252,8 @@ public final class ArtConfig {
 	public static final int[] SCENE_DURATION = {
 		5000, // Scene 1 = 5 วินาที
 		2000, // Scene 2 = 2 วินาที
-		5000,  // Scene 3 = 10 วินาที
+		6000,  // Scene 3 = 6 วินาที - ต้องเท่ากับ KmitlBoardDrawable.totalTime() ของซีนนี้
+		       //                      ซีนจะได้ตัดไป Scene 4 ตอนป้ายขาวเต็มจอพอดี
 		2000,  // Scene 4 = 2 วินาที
 	};
 
