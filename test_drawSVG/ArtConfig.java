@@ -33,6 +33,7 @@ public final class ArtConfig {
     public static final Color MONITOR = new Color(0x2B3442);
     public static final Color DEVICE = new Color(0xC9D1DA);
     public static final Color PANTS = new Color(0x4A5568);
+    public static final Color CHAIR = new Color(0x4A4A4A);
 
 
     /** จุดเริ่มเทสีหนึ่งจุด พิกัดเป็นหน่วย viewBox ไม่ใช่พิกเซลจอ */
@@ -246,9 +247,9 @@ public final class ArtConfig {
 	
     private static final double[][] SAD_DAMS = {
             { 6.7, 630.5, -70.9, 660.7 },        // ขอบซ้าย - คั่นผนังกับโต๊ะ
-            // { 1195, 328, 1600, 328 },     // ขอบขวา - คั่นผนังกับแขน
-            // { 1195, 374, 1600, 374 }, // ขอบขวา - คั่นแขนกับเก้าอี้/โต๊ะ
-            // { 1195.5, 365.0, 1193.3, 371.7 }, // ขอบขวา - คั่นแขนกับเก้าอี้/โต๊ะ
+            { 461.5, 425, 461.5, -240 },     // ขอบขวา - คั่นผนังกับแขน
+            { 564.3, 253.5, 577.7, 246.8 }, // ขอบขวา - คั่นแขนกับเก้าอี้/โต๊ะ
+            {1197, 336, 1197, 385}, // ขอบขวา - คั่นแขนกับเก้าอี้/โต๊ะ
             { 550, 764.3, 1249.1, 768.8}     // ขอบล่าง
             
     };
@@ -260,7 +261,13 @@ public final class ArtConfig {
             new Seed(659.0, 135.0, HAIR),        // ผม
             new Seed(651.9, 295.7, SKIN),        // ใบหน้า
             new Seed(615.5, 245.1, SKIN),        // เลนส์แว่น
-            new Seed(757.5, 239.8, SKIN),        // หู + ข้างคอ
+            new Seed(757.5, 239.8, SHIRT),        // หู + ข้างคอ
+            new Seed(546.5, 251.3, SKIN),        // หู + ข้างคอ
+            new Seed(559.9, 273.6, SKIN),        // หู + ข้างคอ
+            new Seed(700.4, 166.5, SKIN),        // หู + ข้างคอ
+            new Seed(702.6, 177.7, SKIN),        // หู + ข้างคอ
+            new Seed(702.6, 200.0, SKIN),        // หู + ข้างคอ
+            new Seed(695.9, 168.8, SKIN),        // หู + ข้างคอ
             new Seed(811.7, 458.1, SHIRT),       // ลำตัว
             new Seed(910.2, 333.9, SHIRT),       // แขนขวาที่เท้าหลัง
             new Seed(695.4, 547.8, SHIRT),       // แขนซ้ายที่พิมพ์
@@ -268,14 +275,21 @@ public final class ArtConfig {
             new Seed(1027.4, 433.3, SHIRT),      // รักแร้
             new Seed(913.8, 680.0, SHIRT),       // ชายเสื้อ
             new Seed(738.9, 523.8, INSIDESHIRT), // สาบเสื้อ
-            new Seed(752.2, 645.4, INSIDESHIRT),
+            new Seed(752.2, 645.4, BACKDROP),   // ขอบโต๊ะด้านซ้าย
             new Seed(710.5, 666.7, INSIDESHIRT),
             new Seed(682.8, 361.6, INSIDESHIRT), // ปกเสื้อใต้คาง
             new Seed(699.5, 376.2, INSIDESHIRT),
             new Seed(596.0, 581.5, SKIN),        // มือบนคีย์บอร์ด
             new Seed(494.8, 561.1, SKIN),        // นิ้ว
             new Seed(1010.5, 621.4, SKIN),       // มือที่เท้าหลัง
-            new Seed(1038.9, 705.7, PANTS),      // กางเกง
+            new Seed(1038.9, 705.7, SHIRT),  
+            new Seed(702.6, 474.3, SHIRT),
+            new Seed(700.4, 496.6, SHIRT),
+            new Seed(698.1, 505.6, SHIRT),
+            new Seed(700.4, 719.7, PANTS),       // ขา  
+            new Seed(1026.0, 440.9, CHAIR),       // เก้าอี้
+            new Seed(1121.9, 597.0, CHAIR),       // เก้าอี้
+            new Seed(1041.6, 755.4, CHAIR),
 
             // ---- จอมอนิเตอร์ ----
             new Seed(239.2, 402.2, MONITOR),     // แผงซ้ายของหน้าจอ
@@ -286,7 +300,6 @@ public final class ArtConfig {
             new Seed(287.1, 162.6, MONITOR),     // หัวแผงโค้ด
             new Seed(209.0, 485.6, MONITOR),     // แถบสถานะล่าง
             new Seed(122.9, 496.3, MONITOR),
-            new Seed(315.5, 125.3, MONITOR),     // หน้าปัดนาฬิกาบนจอ
             new Seed(182.8, 473.1, MONITOR),     // เศษพื้นจอที่เหลือ - ถ้าไม่เท จะเป็นรอยขาวบนจอมืด
             new Seed(282.8, 182.4, MONITOR),
             new Seed(413.0, 423.1, MONITOR),
