@@ -35,6 +35,7 @@ public final class ArtConfig {
     public static final Color HAIR     = new Color(0x6B4A2E);
     public static final Color SKIN     = new Color(0xFFDCB8);
     public static final Color SHIRT    = new Color(0x7FA8D4);
+    public static final Color INSIDESHIRT    = new Color(0xF2EFE7);
     public static final Color SCREEN   = new Color(0xDCEBFF);
 
     /** จุดเริ่มเทสีหนึ่งจุด พิกัดเป็นหน่วย viewBox ไม่ใช่พิกเซลจอ */
@@ -46,6 +47,7 @@ public final class ArtConfig {
 
     public static final Seed[] COMMON = {
         new Seed( 30.0,  30.0, BACKDROP),
+        new Seed( 317.8, 257.2, BACKDROP),
         new Seed( 218.6, 413.4, TABLE),
         new Seed(229.8, 207.6, SHIRT),
         new Seed(301.0,  75.5, HAIR),
@@ -61,6 +63,11 @@ public final class ArtConfig {
         new Seed(355.8, 208.2, SHIRT),
         new Seed(298.9, 272.9, SHIRT),
         new Seed(333.5, 152.4, SHIRT),
+        new Seed(306.7, 110.0, SKIN),
+        new Seed(267.7, 106.7, HAIR),
+        new Seed(267.7, 105.6, HAIR),
+        new Seed(281.0, 100.0, SKIN),
+        new Seed(227.5, 166.9, INSIDESHIRT),
     };
 
     public static final Seed[] SCREEN_PER_FRAME = {
