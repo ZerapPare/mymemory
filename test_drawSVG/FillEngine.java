@@ -33,7 +33,9 @@ public final class FillEngine {
     public static BufferedImage rasteriseBackground(Path2D path, ArtConfig.Seed[] seeds,
             double[][] dams, AffineTransform at, int w, int h, boolean colorOn) {
 
-        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        // ARGB ไม่ใช่ RGB เพราะตอนท้ายจะทำบริเวณผนังให้โปร่ง
+        // props ที่วาดไว้ก่อนหน้าจะได้ทะลุขึ้นมาได้ ตัวละครจึงอยู่หน้า props
+        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = img.createGraphics();
         g.setColor(Color.WHITE);
         g.fillRect(0, 0, w, h);
@@ -82,7 +84,38 @@ public final class FillEngine {
                         + " - บริเวณรวมกับเพื่อนบ้านคนละสี");
             }
         }
+
+        makeWallTransparent(px);
         return img;
+    }
+
+    /**
+     * เปลี่ยนพิกเซลสีผนังให้โปร่งใส
+     *
+     * ต้องทำ "หลัง" flood fill ครบทุก seed แล้วเท่านั้น - พิกเซลโปร่งมีค่า RGB
+     * เป็น 0 ซึ่งชนกับสีหมึกดำ ถ้าทำระหว่างทางจะไปกวน seed ตัวถัดไป
+     *
+     * ผลคือ props ที่ panel วาดไว้ก่อนหน้าทะลุขึ้นมาตรงผนังได้ ตัวละครจึงอยู่หน้า
+     * props แทนที่จะถูกทับ
+     */
+    private static void makeWallTransparent(int[] px) {
+        int wall = ArtConfig.BACKDROP.getRGB() & 0xFFFFFF;
+        for (int i = 0; i < px.length; i++) {
+            if ((px[i] & 0xFFFFFF) == wall) {
+                px[i] = 0x00000000;
+            }
+        }
+        // ไม่เตือนตรงนี้ - ภาพทึบทั้งใบเป็นปัญหาก็ต่อเมื่อซีนนั้นมี props อยู่ข้างหลัง
+        // ซึ่ง FillEngine ไม่รู้ คนเรียกเป็นคนเช็ค
+    }
+
+    /** ภาพนี้มีพิกเซลโปร่งบ้างไหม - ใช้เช็คว่าซีนลืม seed BACKDROP หรือเปล่า */
+    public static boolean hasTransparent(BufferedImage img) {
+        int[] px = ((DataBufferInt) img.getRaster().getDataBuffer()).getData();
+        for (int p : px) {
+            if ((p >>> 24) == 0) return true;
+        }
+        return false;
     }
 
     private static double s(AffineTransform at) {

@@ -23,7 +23,10 @@ public class MultiSvgAnimationApp extends JPanel {
     /** ข้อมูลของแต่ละเฟรม (SVG + Drawable objects) */
     private static class FrameData {
         Path2D svgPath;
-        List<Drawable> drawables = new ArrayList<>();
+        /** วาดก่อนตัวละคร - ของที่ติดผนัง ตัวละครจะบังได้ */
+        List<Drawable> behind = new ArrayList<>();
+        /** วาดหลังตัวละคร - ของที่อยู่หน้าคน เช่นของบนโต๊ะ */
+        List<Drawable> front = new ArrayList<>();
         FrameData(Path2D path) {
             this.svgPath = path;
         }
@@ -151,20 +154,30 @@ public class MultiSvgAnimationApp extends JPanel {
 
         if (sceneStartTime < 0) sceneStartTime = time;
 
-        // 1. Render Background & Frames ตามปกติ
         ensureBackgrounds(getWidth(), getHeight());
+        FrameData fd = frames.get(currentIndex);
+
+        // 1. สีผนัง - เดิมมาจาก flood fill ตอนนี้ย้ายมาถมพื้น panel แทน
+        //    เพราะผนังในภาพตัวละครถูกทำให้โปร่งไปแล้ว
+        g2.setColor(ArtConfig.BACKDROP);
+        g2.fillRect(0, 0, getWidth(), getHeight());
+
+        // 2. props ที่ติดผนัง - วาดก่อน ตัวละครจะได้บังได้
+        for (Drawable d : fd.behind) {
+            d.draw(g2, time);
+        }
+
+        // 3. ตัวละคร - ผนังโปร่ง props ข้างหลังจึงทะลุขึ้นมา
         if (currentIndex < backgrounds.size()) {
             g.drawImage(backgrounds.get(currentIndex), 0, 0, null);
         }
 
-        // 2. Render Props อื่นๆ ในซีน
-        FrameData fd = frames.get(currentIndex);
-        for (Drawable d : fd.drawables) {
+        // 4. props ที่อยู่หน้าคน
+        for (Drawable d : fd.front) {
             d.draw(g2, time);
         }
 
-		
-        // 3. Render Component Overlay หมุนขยายทับข้างบน
+        // 5. Render Component Overlay หมุนขยายทับข้างบน
         if (zoomingOverlay != null) {
             zoomingOverlay.draw(g2, time - sceneStartTime);
         }
@@ -175,11 +188,14 @@ public class MultiSvgAnimationApp extends JPanel {
 
     /** ของประกอบฉากที่วาดทับทุกเฟรม */
     private void addProps(FrameData fd) {
-        fd.drawables.add(new WallClockDrawable(92, 70, 0.25));
-        fd.drawables.add(new DeskDecorDrawable());
-        fd.drawables.add(new WindowBackgroundDrawable());
+        // ติดผนัง - ตัวละครบังได้
+        fd.behind.add(new WindowBackgroundDrawable());
+        fd.behind.add(new WallClockDrawable(92, 70, 0.25));
         // ชั้นวางต้นไม้ใต้นาฬิกา (กึ่งกลาง x, ระดับแผ่นชั้น, สเกล)
-        fd.drawables.add(new PlantShelfDrawable(92, 180, 1.0));
+        fd.behind.add(new PlantShelfDrawable(92, 180, 1.0));
+
+        // อยู่บนโต๊ะ หน้าตัวละคร
+        fd.front.add(new DeskDecorDrawable());
     }
 
     // =================== paintComponent ===================
@@ -223,6 +239,13 @@ public class MultiSvgAnimationApp extends JPanel {
 		}
 		lastW = w;
 		lastH = h;
+
+		// ภาพทึบทั้งใบจะบัง props ที่อยู่ข้างหลัง - เป็นปัญหาเฉพาะซีนที่มี props หลัง
+		if (!frames.isEmpty() && !frames.get(0).behind.isEmpty()
+				&& !FillEngine.hasTransparent(backgrounds.get(0))) {
+			System.err.println("[layer] ซีน " + scene.name + " ไม่มี seed BACKDROP "
+					+ "ภาพจึงทึบทั้งใบ props ที่อยู่ข้างหลังจะถูกบัง");
+		}
     }
 
     // =================== Picker (คลิกหาพิกัด) ===================
@@ -254,8 +277,9 @@ public class MultiSvgAnimationApp extends JPanel {
         String frame = currentIndex < names.size() ? names.get(currentIndex) : "?";
         String what = "out";
         if (currentIndex < backgrounds.size() && px >= 0 && px < w && py >= 0 && py < h) {
-            int rgb = backgrounds.get(currentIndex).getRGB(px, py) & 0xFFFFFF;
-            what = ArtConfig.describe(rgb);
+            int argb = backgrounds.get(currentIndex).getRGB(px, py);
+            // พิกเซลโปร่งมี RGB = 0 ซึ่งชนกับสีหมึกดำ ต้องเช็ค alpha ก่อน
+            what = (argb >>> 24) == 0 ? "wall (โปร่ง)" : ArtConfig.describe(argb & 0xFFFFFF);
         }
 
         pickText = String.format("%s  (%.1f, %.1f)  %s", frame, ux, uy, what);

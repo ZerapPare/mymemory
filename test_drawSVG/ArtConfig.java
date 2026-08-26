@@ -138,27 +138,23 @@ public final class ArtConfig {
     // หาเพิ่มได้ด้วยการรันแล้วคลิกบนรูป มันพิมพ์บรรทัด Seed ให้
 
     private static final Seed[] SHOCKED = {
-            // new Seed( 30.0, 30.0, BACKDROP), // ผนัง
-            // new Seed(298.9, 451.8, TABLE), // โต๊ะ - แยกจากผนังได้เพราะเส้นอุด
-            // new Seed(203.3, 302.9, SHIRT), // ลำตัว
-            // new Seed(346.5, 247.0, SHIRT), // แขนเสื้อ
-            // new Seed(315.2, 262.7, SHIRT), // ข้อศอก
-            // new Seed(301.1, 75.7, HAIR), // ผม
-            // new Seed(293.5, 142.0, SKIN), // ใบหน้า
-            // new Seed(297.8, 117.0, SKIN), // หน้าผาก
-            // new Seed(303.8, 124.6, SKIN), // ตา
-            // new Seed(279.3, 176.8, SKIN), // มือที่คาง
-            // new Seed(252.0, 160.0, SKIN), // คอ
-            // new Seed(210.0, 146.0, INSIDESHIRT), // สายบ่า
-            // new Seed(238.6, 177.9, INSIDESHIRT), // ปกเสื้อ
-            // new Seed(400.5, 292.5, SCREEN), // จอแท็บเล็ต
-            // new Seed(400.5, 311.0, SCREEN), // ไอคอนบนจอ
+            new Seed(30.0, 30.0, BACKDROP),      // ผนัง
+            new Seed(298.9, 451.8, TABLE),       // โต๊ะ - แยกจากผนังได้เพราะเส้นอุด
+            new Seed(190.2, 192.0, SHIRT),       // ลำตัว
+            new Seed(371.7, 145.3, SHIRT),       // แขนขวาที่ยกขึ้น
+            new Seed(297.8, 72.4, HAIR),         // ผม
+            new Seed(265.2, 123.5, SKIN),        // ใบหน้า
+            new Seed(306.5, 114.8, SKIN),        // ตา
+            new Seed(81.5, 75.7, SKIN),          // กำปั้นซ้าย
+            new Seed(458.7, 52.9, SKIN),         // กำปั้นขวา
+            new Seed(270.7, 197.4, INSIDESHIRT), // คอเสื้อ
+            new Seed(253.3, 165.9, INSIDESHIRT), // ปกเสื้อ
+            new Seed(401.1, 293.1, SCREEN),      // จอแท็บเล็ต
+            new Seed(400.0, 312.7, SCREEN),      // ไอคอนบนจอ
     };
 
-    private static final Seed[] SHOCKED_FISTS = {
-            new Seed(387.0, 132.2, SKIN), // c1
-            new Seed(402.2, 142.0, SKIN), // c2
-    };
+    /** ซีนนี้มีเฟรมเดียว ไม่มีอะไรขยับระหว่างเฟรม */
+    private static final Seed[] SHOCKED_FISTS = {};
 
     public static final Scene SCENE_2 = new Scene("shock",
             new String[] {
