@@ -150,6 +150,17 @@ public class MultiSvgAnimationApp extends JPanel {
         if (frames.isEmpty()) return;
 
         Graphics2D g2 = (Graphics2D) g;
+
+		g2.setRenderingHint(
+			RenderingHints.KEY_ANTIALIASING,
+			RenderingHints.VALUE_ANTIALIAS_ON
+		);
+
+		g2.setRenderingHint(
+			RenderingHints.KEY_RENDERING,
+			RenderingHints.VALUE_RENDER_QUALITY
+		);
+
         double time = System.currentTimeMillis() / 1000.0;
 
         if (sceneStartTime < 0) sceneStartTime = time;

@@ -74,7 +74,7 @@ public class KmitlBoardDrawable implements Drawable {
         
         // หมุน 4 รอบ พร้อมขยายขนาด
         double boardScale = progress; 
-        double boardRotation = Math.toRadians(360 * 4 * progress);
+        double boardRotation = Math.toRadians(360 * 10 * progress);
 
         Graphics2D g = (Graphics2D) g2.create();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
