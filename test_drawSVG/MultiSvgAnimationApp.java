@@ -93,6 +93,14 @@ public class MultiSvgAnimationApp extends JPanel {
      * ต้องตั้ง lastW = -1 ด้วย ไม่งั้น ensureBackgrounds เห็นว่าขนาดหน้าต่าง
      * ไม่เปลี่ยนแล้ว return ทันที จะได้ภาพซีนเก่าค้าง
      */
+
+    // ... (คงตัวแปรเดิมไว้) ...
+
+    /** เพิ่มตัวแปรสำหรับรูป SVG ที่จะหมุนขยายทับหน้าจอ */
+    private KmitlBoardDrawable zoomingOverlay;
+    private double sceneStartTime = -1; // ตัวจับเวลาเริ่มซีน (หน่วยวินาที)
+
+    // =================== loadScene ===================
     public void loadScene(int index) {
         ArtConfig.Scene next = ArtConfig.SCENES[index];
 
@@ -100,10 +108,7 @@ public class MultiSvgAnimationApp extends JPanel {
         List<String> loadedNames = new ArrayList<>();
         for (String filePath : next.files) {
             Path2D path = SvgLoader.loadSvg(filePath);
-            if (path == null) {
-                System.err.println("[scene] " + next.name + ": อ่าน " + filePath + " ไม่ได้ - ข้าม");
-                continue;
-            }
+            if (path == null) continue;
             FrameData fd = new FrameData(path);
             addProps(fd);
             loaded.add(fd);
@@ -111,11 +116,7 @@ public class MultiSvgAnimationApp extends JPanel {
             loadedNames.add(n.endsWith(".svg") ? n.substring(0, n.length() - 4) : n);
         }
 
-        if (loaded.isEmpty()) {
-            // ซีนว่างเปล่า - อยู่ซีนเดิมดีกว่าจอดำ
-            System.err.println("[scene] " + next.name + " ไม่มีเฟรมที่โหลดได้เลย - ไม่สลับ");
-            return;
-        }
+        if (loaded.isEmpty()) return;
 
         scene = next;
         sceneIndex = index;
@@ -126,8 +127,48 @@ public class MultiSvgAnimationApp extends JPanel {
         backgrounds.clear();
         currentIndex = 0;
         frameCounter = 0;
-        lastW = -1;              // บังคับสร้างพื้นหลังใหม่
+        lastW = -1;
+        sceneStartTime = -1; // รีเซ็ตเวลาเริ่มต้นซีนใหม่
+
+        // -----------------------------------------------------------
+        if (sceneIndex == 2) { 
+			this.zoomingOverlay = new KmitlBoardDrawable(2.5, 2.0);
+		} else {
+			this.zoomingOverlay = null;
+		}
     }
+
+    // =================== paintComponent ===================
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        if (frames.isEmpty()) return;
+
+        Graphics2D g2 = (Graphics2D) g;
+        double time = System.currentTimeMillis() / 1000.0;
+
+        if (sceneStartTime < 0) sceneStartTime = time;
+
+        // 1. Render Background & Frames ตามปกติ
+        ensureBackgrounds(getWidth(), getHeight());
+        if (currentIndex < backgrounds.size()) {
+            g.drawImage(backgrounds.get(currentIndex), 0, 0, null);
+        }
+
+        // 2. Render Props อื่นๆ ในซีน
+        FrameData fd = frames.get(currentIndex);
+        for (Drawable d : fd.drawables) {
+            d.draw(g2, time);
+        }
+
+        // 3. Render Component Overlay หมุนขยายทับข้างบน
+        if (zoomingOverlay != null) {
+            zoomingOverlay.draw(g2, time - sceneStartTime);
+        }
+
+        drawHud(g2);
+    }
+
 
     /** ของประกอบฉากที่วาดทับทุกเฟรม */
     private void addProps(FrameData fd) {
@@ -139,32 +180,7 @@ public class MultiSvgAnimationApp extends JPanel {
     }
 
     // =================== paintComponent ===================
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        if (frames.isEmpty()) return;
-
-        Graphics2D g2 = (Graphics2D) g;
-
-        // 1. สร้างพื้นหลัง (Cache) ถ้าขนาดหน้าต่างเปลี่ยน
-        ensureBackgrounds(getWidth(), getHeight());
-
-        // 2. วาดพื้นหลัง (SVG ที่ใส่สีแล้ว)
-        if (currentIndex < backgrounds.size()) {
-            g.drawImage(backgrounds.get(currentIndex), 0, 0, null);
-        }
-
-        // 3. วาด Drawable Objects ของเฟรมปัจจุบัน
-        FrameData fd = frames.get(currentIndex);
-        double time = System.currentTimeMillis() / 1000.0; // เวลาจริงเป็นวินาที
-        for (Drawable d : fd.drawables) {
-            d.draw(g2, time);
-        }
-
-        // 4. วาด HUD
-        drawHud(g2);
-    }
-
+    
     private void drawHud(Graphics2D g) {
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                 RenderingHints.VALUE_TEXT_ANTIALIAS_ON);

@@ -206,7 +206,7 @@ public final class ArtConfig {
 	public static final int[] SCENE_DURATION = {
 		5000, // Scene 1 = 5 วินาที
 		2000, // Scene 2 = 2 วินาที
-		7000  // Scene 3 = 7 วินาที
+		10000  // Scene 3 = 7 วินาที
 	};
 
     /** เทสีลงเฉพาะพิกเซลขาวล้วน เส้นหมึกและสีที่เทไปแล้วกั้นอยู่ */
@@ -235,4 +235,17 @@ public final class ArtConfig {
             return "screen";
         return String.format("#%06X", rgb);
     }
+
+	// ==================== OVERLAY CONFIG ====================
+    // /** ไฟล์ SVG ชิ้นส่วน/Component ที่ต้องการนำมาหมุนขยาย */
+    // public static final String OVERLAY_SVG_PATH = "test_drawSVG/text2.svg"; 
+
+    // /** จุดหมุนกลางจอ (หน่วยตาม viewBox เช่น 600x384 จุดกลางคือ 300, 192) */
+    // public static final double OVERLAY_CENTER_X = 300.0;
+    // public static final double OVERLAY_CENTER_Y = 300.0;
+
+    // /** เวลาที่ใช้ในการหมุนขยาย (วินาที) */
+    // public static final double OVERLAY_START_DELAY = 2.5; // เริ่มหลังเข้าซีน 2.5 วินาที
+    // public static final double OVERLAY_DURATION = 2.0;    // ใช้เวลาหมุนขยาย 2 วินาที
+    // public static final double OVERLAY_TOTAL_ROTATION = Math.toRadians(1440); // หมุน 4 รอบ
 }
