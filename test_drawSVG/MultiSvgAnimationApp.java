@@ -48,6 +48,8 @@ public class MultiSvgAnimationApp extends JPanel {
 
     private String pickText = "click to pick a point";
 
+	private int sceneElapsedTime = 0;
+
     // =================== Constructor ===================
     public MultiSvgAnimationApp(int startScene) {
         setOpaque(true);
@@ -56,20 +58,30 @@ public class MultiSvgAnimationApp extends JPanel {
         installPicker();
 
         timer = new Timer(ArtConfig.TICK_INTERVAL, e -> {
-            if (!paused) {
-                frameCounter += ArtConfig.TICK_INTERVAL;
-                if (frameCounter >= ArtConfig.FRAME_INTERVAL) {
-                    frameCounter = 0;
-                    if (currentIndex + 1 >= frames.size()) {
-                        // จบซีนแล้ว ไปซีนถัดไป วนกลับมาซีนแรก
-                        loadScene((sceneIndex + 1) % ArtConfig.SCENES.length);
-                    } else {
-                        currentIndex++;
-                    }
-                }
-            }
-            repaint();
-        });
+			if (!paused) {
+				sceneElapsedTime += ArtConfig.TICK_INTERVAL;
+				frameCounter += ArtConfig.TICK_INTERVAL;
+
+				if (frameCounter >= ArtConfig.FRAME_INTERVAL) {
+					frameCounter = 0;
+
+					if (currentIndex + 1 >= frames.size()) {
+						currentIndex = 0;
+					} else {
+						currentIndex++;
+					}
+				}
+
+				// ถ้าเล่น Scene นี้ครบเวลาที่กำหนด
+				if (sceneElapsedTime >= ArtConfig.SCENE_DURATION[sceneIndex]) {
+					sceneElapsedTime = 0;
+					// ไป Scene ถัดไป
+					loadScene((sceneIndex + 1) % ArtConfig.SCENES.length);
+				}
+			}
+
+			repaint();
+		});
 
         loadScene(startScene);
         timer.start();

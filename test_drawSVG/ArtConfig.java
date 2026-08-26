@@ -203,6 +203,12 @@ public final class ArtConfig {
     /** ลำดับการเล่น - จบซีนหนึ่งแล้วไปซีนถัดไป วนกลับมาซีนแรก */
     public static final Scene[] SCENES = { SCENE_1, SCENE_2, SCENE_3 };
 
+	public static final int[] SCENE_DURATION = {
+		5000, // Scene 1 = 5 วินาที
+		2000, // Scene 2 = 2 วินาที
+		7000  // Scene 3 = 7 วินาที
+	};
+
     /** เทสีลงเฉพาะพิกเซลขาวล้วน เส้นหมึกและสีที่เทไปแล้วกั้นอยู่ */
     public static final int BLANK = 0xFFFFFF;
 
