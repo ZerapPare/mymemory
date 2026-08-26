@@ -122,13 +122,45 @@ public final class ArtConfig {
             "test_drawSVG/a1.svg",
             "test_drawSVG/a2.svg",
             "test_drawSVG/a3.svg",
-            "test_drawSVG/b1.svg",
-            "test_drawSVG/b2.svg",
-            "test_drawSVG/b3.svg",
+            "test_drawSVG/a4.svg",
+            "test_drawSVG/a5.svg",
+            "test_drawSVG/a6.svg",
         },
         SITTING, SITTING_SCREENS, ROOM_DAMS);
 
-    // ==================== ซีน 2 : ดีใจ ====================
+    // ==================== ซีน 2 : ตกใจ ====================
+    // พิกัดชุดนี้ต้องวัดจากภาพ b1 เอง ใช้ของซีน 1 ไม่ได้เพราะท่าคนละท่า
+    // หาเพิ่มได้ด้วยการรันแล้วคลิกบนรูป มันพิมพ์บรรทัด Seed ให้
+
+        private static final Seed[] SHOCKED = {
+        // new Seed( 30.0,  30.0, BACKDROP),     // ผนัง
+        // new Seed(298.9, 451.8, TABLE),        // โต๊ะ - แยกจากผนังได้เพราะเส้นอุด
+        // new Seed(203.3, 302.9, SHIRT),        // ลำตัว
+        // new Seed(346.5, 247.0, SHIRT),        // แขนเสื้อ
+        // new Seed(315.2, 262.7, SHIRT),        // ข้อศอก
+        // new Seed(301.1,  75.7, HAIR),         // ผม
+        // new Seed(293.5, 142.0, SKIN),         // ใบหน้า
+        // new Seed(297.8, 117.0, SKIN),         // หน้าผาก
+        // new Seed(303.8, 124.6, SKIN),         // ตา
+        // new Seed(279.3, 176.8, SKIN),         // มือที่คาง
+        // new Seed(252.0, 160.0, SKIN),         // คอ
+        // new Seed(210.0, 146.0, INSIDESHIRT),  // สายบ่า
+        // new Seed(238.6, 177.9, INSIDESHIRT),  // ปกเสื้อ
+        // new Seed(400.5, 292.5, SCREEN),       // จอแท็บเล็ต
+        // new Seed(400.5, 311.0, SCREEN),       // ไอคอนบนจอ
+    };
+
+        private static final Seed[] SHOCKED_FISTS = {
+        new Seed(387.0, 132.2, SKIN),   // c1
+        new Seed(402.2, 142.0, SKIN),   // c2
+    };
+
+        public static final Scene SCENE_2 = new Scene("shock",
+        new String[] {
+            "test_drawSVG/b1.svg",
+        },SHOCKED, SHOCKED_FISTS, ROOM_DAMS);
+
+    // ==================== ซีน 3 : ดีใจ ====================
     // พิกัดชุดนี้ต้องวัดจากภาพ c1/c2 เอง ใช้ของซีน 1 ไม่ได้เพราะท่าคนละท่า
     // หาเพิ่มได้ด้วยการรันแล้วคลิกบนรูป มันพิมพ์บรรทัด Seed ให้
 
@@ -156,15 +188,17 @@ public final class ArtConfig {
         new Seed(402.2, 142.0, SKIN),   // c2
     };
 
-    public static final Scene SCENE_2 = new Scene("happy",
+        public static final Scene SCENE_3 = new Scene("happy",
         new String[] {
             "test_drawSVG/c1.svg",
             "test_drawSVG/c2.svg",
         },
         CELEBRATING, CELEBRATING_FISTS, ROOM_DAMS);
 
+
+
     /** ลำดับการเล่น - จบซีนหนึ่งแล้วไปซีนถัดไป วนกลับมาซีนแรก */
-    public static final Scene[] SCENES = { SCENE_1, SCENE_2 };
+    public static final Scene[] SCENES = { SCENE_1, SCENE_2, SCENE_3 };
 
     /** เทสีลงเฉพาะพิกเซลขาวล้วน เส้นหมึกและสีที่เทไปแล้วกั้นอยู่ */
     public static final int BLANK = 0xFFFFFF;
