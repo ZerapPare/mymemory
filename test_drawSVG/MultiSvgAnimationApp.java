@@ -110,7 +110,9 @@ public class MultiSvgAnimationApp extends JPanel {
             Path2D path = SvgLoader.loadSvg(filePath);
             if (path == null) continue;
             FrameData fd = new FrameData(path);
-            addProps(fd);
+			if (!next.name.equals("sad")) {
+				addProps(fd);
+			}
             loaded.add(fd);
             String n = new File(filePath).getName();
             loadedNames.add(n.endsWith(".svg") ? n.substring(0, n.length() - 4) : n);
@@ -161,6 +163,7 @@ public class MultiSvgAnimationApp extends JPanel {
             d.draw(g2, time);
         }
 
+		
         // 3. Render Component Overlay หมุนขยายทับข้างบน
         if (zoomingOverlay != null) {
             zoomingOverlay.draw(g2, time - sceneStartTime);
@@ -199,21 +202,27 @@ public class MultiSvgAnimationApp extends JPanel {
     private void ensureBackgrounds(int w, int h) {
         if (w <= 0 || h <= 0 || (w == lastW && h == lastH && !backgrounds.isEmpty())) return;
 
-        double s = Math.min(Math.max(1, w - 2 * ArtConfig.PAD) / ArtConfig.VBW,
-                Math.max(1, h - 2 * ArtConfig.PAD) / ArtConfig.VBH);
-        AffineTransform at = new AffineTransform();
-        at.translate(w / 2.0, h / 2.0);
-        at.scale(s, s);
-        at.translate(-ArtConfig.VBW / 2, -ArtConfig.VBH / 2);
+        double vbw = ArtConfig.VBW;
+		double vbh = ArtConfig.VBH;
+		if (scene != null && "sad".equals(scene.name)) {
+			vbw = ArtConfig.VBW_SAD;
+			vbh = ArtConfig.VBH_SAD;
+		}
 
-        backgrounds.clear();
-        for (int i = 0; i < frames.size(); i++) {
-            // seed กับเส้นอุดมาจากซีนปัจจุบัน ไม่ใช่จากค่ากลาง
-            backgrounds.add(FillEngine.rasteriseBackground(
-                    frames.get(i).svgPath, scene.seedsFor(i), scene.dams, at, w, h, colorOn));
-        }
-        lastW = w;
-        lastH = h;
+		double s = Math.min(Math.max(1, w - 2 * ArtConfig.PAD) / vbw,
+							Math.max(1, h - 2 * ArtConfig.PAD) / vbh);
+		AffineTransform at = new AffineTransform();
+		at.translate(w / 2.0, h / 2.0);
+		at.scale(s, s);
+		at.translate(-vbw / 2, -vbh / 2);
+
+		backgrounds.clear();
+		for (int i = 0; i < frames.size(); i++) {
+			backgrounds.add(FillEngine.rasteriseBackground(
+					frames.get(i).svgPath, scene.seedsFor(i), scene.dams, at, w, h, colorOn));
+		}
+		lastW = w;
+		lastH = h;
     }
 
     // =================== Picker (คลิกหาพิกัด) ===================
@@ -228,12 +237,19 @@ public class MultiSvgAnimationApp extends JPanel {
 
     private void pick(int px, int py) {
         int w = getWidth(), h = getHeight();
-        if (w <= 0 || h <= 0 || frames.isEmpty()) return;
+		if (w <= 0 || h <= 0 || frames.isEmpty()) return;
 
-        double s = Math.min(Math.max(1, w - 2 * ArtConfig.PAD) / ArtConfig.VBW,
-                Math.max(1, h - 2 * ArtConfig.PAD) / ArtConfig.VBH);
-        double ux = (px - w / 2.0) / s + ArtConfig.VBW / 2;
-        double uy = (py - h / 2.0) / s + ArtConfig.VBH / 2;
+		double vbw = ArtConfig.VBW;
+		double vbh = ArtConfig.VBH;
+		if (scene != null && "sad".equals(scene.name)) {
+			vbw = ArtConfig.VBW_SAD;
+			vbh = ArtConfig.VBH_SAD;
+		}
+
+		double s = Math.min(Math.max(1, w - 2 * ArtConfig.PAD) / vbw,
+							Math.max(1, h - 2 * ArtConfig.PAD) / vbh);
+		double ux = (px - w / 2.0) / s + vbw / 2;
+		double uy = (py - h / 2.0) / s + vbh / 2;
 
         String frame = currentIndex < names.size() ? names.get(currentIndex) : "?";
         String what = "out";

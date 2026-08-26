@@ -199,14 +199,22 @@ public final class ArtConfig {
                     "test_drawSVG/c2.svg",
             },
             CELEBRATING, CELEBRATING_FISTS, ROOM_DAMS);
+	
+	public static final Scene SCENE_4 = new Scene("sad",
+		new String[]{"test_drawSVG/d.svg"},
+		new Seed[0],
+		new Seed[0],
+		new double[0][]   // ไม่มีเส้นอุด
+	);
 
     /** ลำดับการเล่น - จบซีนหนึ่งแล้วไปซีนถัดไป วนกลับมาซีนแรก */
-    public static final Scene[] SCENES = { SCENE_1, SCENE_2, SCENE_3 };
+    public static final Scene[] SCENES = { SCENE_1, SCENE_2, SCENE_3 , SCENE_4};
 
 	public static final int[] SCENE_DURATION = {
 		5000, // Scene 1 = 5 วินาที
 		2000, // Scene 2 = 2 วินาที
-		10000  // Scene 3 = 7 วินาที
+		5000,  // Scene 3 = 10 วินาที
+		2000,  // Scene 4 = 2 วินาที
 	};
 
     /** เทสีลงเฉพาะพิกเซลขาวล้วน เส้นหมึกและสีที่เทไปแล้วกั้นอยู่ */
@@ -214,6 +222,7 @@ public final class ArtConfig {
 
     /** ทุกเฟรมใช้กรอบนี้ร่วมกัน ไม่ใช้ bounds ของแต่ละเฟรม */
     public static final double VBW = 600, VBH = 384, PAD = 24;
+	public static final double VBW_SAD = 1200, VBH_SAD = 768;
 
     public static final double DAM_WIDTH = 1.0;
 
@@ -236,16 +245,4 @@ public final class ArtConfig {
         return String.format("#%06X", rgb);
     }
 
-	// ==================== OVERLAY CONFIG ====================
-    // /** ไฟล์ SVG ชิ้นส่วน/Component ที่ต้องการนำมาหมุนขยาย */
-    // public static final String OVERLAY_SVG_PATH = "test_drawSVG/text2.svg"; 
-
-    // /** จุดหมุนกลางจอ (หน่วยตาม viewBox เช่น 600x384 จุดกลางคือ 300, 192) */
-    // public static final double OVERLAY_CENTER_X = 300.0;
-    // public static final double OVERLAY_CENTER_Y = 300.0;
-
-    // /** เวลาที่ใช้ในการหมุนขยาย (วินาที) */
-    // public static final double OVERLAY_START_DELAY = 2.5; // เริ่มหลังเข้าซีน 2.5 วินาที
-    // public static final double OVERLAY_DURATION = 2.0;    // ใช้เวลาหมุนขยาย 2 วินาที
-    // public static final double OVERLAY_TOTAL_ROTATION = Math.toRadians(1440); // หมุน 4 รอบ
 }
