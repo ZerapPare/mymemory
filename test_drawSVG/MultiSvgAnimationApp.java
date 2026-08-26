@@ -77,8 +77,7 @@ public class MultiSvgAnimationApp extends JPanel {
 
 				// ถ้าเล่น Scene นี้ครบเวลาที่กำหนด
 				if (sceneElapsedTime >= ArtConfig.SCENE_DURATION[sceneIndex]) {
-					sceneElapsedTime = 0;
-					// ไป Scene ถัดไป
+					// ไป Scene ถัดไป (loadScene รีเซ็ต sceneElapsedTime ให้เอง)
 					loadScene((sceneIndex + 1) % ArtConfig.SCENES.length);
 				}
 			}
@@ -99,9 +98,13 @@ public class MultiSvgAnimationApp extends JPanel {
 
     // ... (คงตัวแปรเดิมไว้) ...
 
-    /** เพิ่มตัวแปรสำหรับรูป SVG ที่จะหมุนขยายทับหน้าจอ */
+    /**
+     * รูป SVG ที่หมุนขยายทับหน้าจอ
+     *
+     * เวลาของมันมาจาก sceneElapsedTime ตัวเดียวกับที่ใช้ตัดซีน ไม่ใช่เวลาจริง
+     * จังหวะพุ่งจนขาวเต็มจอจะได้ตรงกับตอนตัดไปซีนถัดไปเป๊ะ และหยุดตามตอนกด SPACE
+     */
     private KmitlBoardDrawable zoomingOverlay;
-    private double sceneStartTime = -1; // ตัวจับเวลาเริ่มซีน (หน่วยวินาที)
 
     // =================== loadScene ===================
     public void loadScene(int index) {
@@ -133,7 +136,8 @@ public class MultiSvgAnimationApp extends JPanel {
         currentIndex = 0;
         frameCounter = 0;
         lastW = -1;
-        sceneStartTime = -1; // รีเซ็ตเวลาเริ่มต้นซีนใหม่
+        // รีเซ็ตที่นี่ที่เดียว - ปุ่ม N ก็เรียกทางนี้ อนิเมชันป้ายจะได้เริ่มจากศูนย์เสมอ
+        sceneElapsedTime = 0;
 
         // -----------------------------------------------------------
         if (sceneIndex == 2) { 
@@ -165,8 +169,6 @@ public class MultiSvgAnimationApp extends JPanel {
 
         double time = System.currentTimeMillis() / 1000.0;
 
-        if (sceneStartTime < 0) sceneStartTime = time;
-
         ensureBackgrounds(getWidth(), getHeight());
         FrameData fd = frames.get(currentIndex);
 
@@ -191,9 +193,10 @@ public class MultiSvgAnimationApp extends JPanel {
         }
 
         // 5. Render Component Overlay หมุนขยายทับข้างบน
+        //    ใช้ sceneElapsedTime ไม่ใช่ time - นาฬิกาเรือนเดียวกับที่ตัดซีน
         if (zoomingOverlay != null) {
             zoomingOverlay.setPanelSize(getWidth(), getHeight());
-            zoomingOverlay.draw(g2, time - sceneStartTime);
+            zoomingOverlay.draw(g2, sceneElapsedTime / 1000.0);
         }
 
         drawHud(g2);

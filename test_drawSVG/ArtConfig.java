@@ -29,7 +29,12 @@ public final class ArtConfig {
     public static final Color MOUTH = new Color(0xFF788D);
     public static final Color TEAR = new Color(0x30AFFF);
     public static final Color STAR = new Color(0xFFDA62);
-    
+    public static final Color HAT = new Color(0x1D2128);
+    public static final Color MONITOR = new Color(0x2B3442);
+    public static final Color DEVICE = new Color(0xC9D1DA);
+    public static final Color PANTS = new Color(0x4A5568);
+
+
     /** จุดเริ่มเทสีหนึ่งจุด พิกัดเป็นหน่วย viewBox ไม่ใช่พิกเซลจอ */
     public static class Seed {
         public final double x, y;
@@ -181,7 +186,7 @@ public final class ArtConfig {
             new Seed(401.1, 293.1, SCREEN),      // จอแท็บเล็ต
             new Seed(400.0, 312.7, SCREEN),      // ไอคอนบนจอ
             new Seed(360.2, 301.9, STAR),
-
+            new Seed(382.5, 310.8, HAT),
     };
 
     /** ซีนนี้มีเฟรมเดียว ไม่มีอะไรขยับระหว่างเฟรม */
@@ -224,13 +229,13 @@ public final class ArtConfig {
             new Seed(400.5, 311.0, SCREEN), // ไอคอนบนจอ
             new Seed(360.2, 301.9, STAR),
             new Seed(292.2, 130.1, TEAR),
+            new Seed(284.4, 136.8, TEAR),
+            new Seed(382.5, 310.8, HAT),
+
     };
 
     /** กำปั้นที่ชูขึ้นขยับระหว่างเฟรม จึงต้องมี seed ต่อเฟรม */
-    private static final Seed[] CELEBRATING_FISTS = {
-            // new Seed(387.0, 132.2, SKIN), // c1
-            // new Seed(402.2, 142.0, SKIN), // c2
-    };
+    private static final Seed[] CELEBRATING_FISTS = {};
 
     public static final Scene SCENE_3 = new Scene("happy",
             new String[] {
@@ -239,12 +244,82 @@ public final class ArtConfig {
             },
             CELEBRATING, CELEBRATING_FISTS, ROOM_DAMS);
 	
-	public static final Scene SCENE_4 = new Scene("sad",
-		new String[]{"test_drawSVG/d.svg"},
-		new Seed[0],
-		new Seed[0],
-		new double[0][]   // ไม่มีเส้นอุด
-	);
+    private static final double[][] SAD_DAMS = {
+            { 6.7, 630.5, -70.9, 660.7 },        // ขอบซ้าย - คั่นผนังกับโต๊ะ
+            // { 1195, 328, 1600, 328 },     // ขอบขวา - คั่นผนังกับแขน
+            // { 1195, 374, 1600, 374 }, // ขอบขวา - คั่นแขนกับเก้าอี้/โต๊ะ
+            // { 1195.5, 365.0, 1193.3, 371.7 }, // ขอบขวา - คั่นแขนกับเก้าอี้/โต๊ะ
+            { 550, 764.3, 1249.1, 768.8}     // ขอบล่าง
+            
+    };
+
+    private static final Seed[] SAD = {
+            new Seed(1063.8, 135.9, BACKDROP),   // ผนัง - ต่อถึงกันทั้งซ้ายขวาผ่าน margin ด้านบน
+            new Seed(107.0, 681.8, TABLE),       // โต๊ะ + เก้าอี้ (ต่อกันผ่าน margin ขวา)
+            new Seed(421.2, 507.8, TABLE),       // แผงโต๊ะที่ยกขึ้นหลังคีย์บอร์ด
+            new Seed(659.0, 135.0, HAIR),        // ผม
+            new Seed(651.9, 295.7, SKIN),        // ใบหน้า
+            new Seed(615.5, 245.1, SKIN),        // เลนส์แว่น
+            new Seed(757.5, 239.8, SKIN),        // หู + ข้างคอ
+            new Seed(811.7, 458.1, SHIRT),       // ลำตัว
+            new Seed(910.2, 333.9, SHIRT),       // แขนขวาที่เท้าหลัง
+            new Seed(695.4, 547.8, SHIRT),       // แขนซ้ายที่พิมพ์
+            new Seed(991.0, 471.4, SHIRT),       // รอยจีบข้างลำตัว
+            new Seed(1027.4, 433.3, SHIRT),      // รักแร้
+            new Seed(913.8, 680.0, SHIRT),       // ชายเสื้อ
+            new Seed(738.9, 523.8, INSIDESHIRT), // สาบเสื้อ
+            new Seed(752.2, 645.4, INSIDESHIRT),
+            new Seed(710.5, 666.7, INSIDESHIRT),
+            new Seed(682.8, 361.6, INSIDESHIRT), // ปกเสื้อใต้คาง
+            new Seed(699.5, 376.2, INSIDESHIRT),
+            new Seed(596.0, 581.5, SKIN),        // มือบนคีย์บอร์ด
+            new Seed(494.8, 561.1, SKIN),        // นิ้ว
+            new Seed(1010.5, 621.4, SKIN),       // มือที่เท้าหลัง
+            new Seed(1038.9, 705.7, PANTS),      // กางเกง
+
+            // ---- จอมอนิเตอร์ ----
+            new Seed(239.2, 402.2, MONITOR),     // แผงซ้ายของหน้าจอ
+            new Seed(367.9, 232.7, MONITOR),     // แผงโค้ดขวา
+            new Seed(107.8, 168.8, MONITOR),     // แถบเครื่องมือ
+            new Seed(120.3, 146.6, MONITOR),     // แถบหัวหน้าต่าง
+            new Seed(128.3, 191.8, MONITOR),     // แถบที่อยู่
+            new Seed(287.1, 162.6, MONITOR),     // หัวแผงโค้ด
+            new Seed(209.0, 485.6, MONITOR),     // แถบสถานะล่าง
+            new Seed(122.9, 496.3, MONITOR),
+            new Seed(315.5, 125.3, MONITOR),     // หน้าปัดนาฬิกาบนจอ
+            new Seed(182.8, 473.1, MONITOR),     // เศษพื้นจอที่เหลือ - ถ้าไม่เท จะเป็นรอยขาวบนจอมืด
+            new Seed(282.8, 182.4, MONITOR),
+            new Seed(413.0, 423.1, MONITOR),
+            new Seed(192.2, 521.0, MONITOR),
+
+            // แท่งกราฟบนจอ
+            new Seed(130.0, 253.1, STAR),
+            new Seed(154.0, 258.4, TEAR),
+            new Seed(178.0, 368.5, MOUTH),
+            new Seed(191.3, 353.4, STAR),
+            new Seed(204.6, 345.4, TEAR),
+
+            // ---- ตัวเครื่อง ----
+            new Seed(120.3, 526.5, DEVICE),      // กรอบจอ
+            new Seed(74.1, 149.2, DEVICE),       // ขอบจอด้านซ้าย
+            new Seed(227.7, 546.0, DEVICE),      // คอขาตั้ง
+            new Seed(177.1, 550.4, DEVICE),
+            new Seed(272.9, 577.9, DEVICE),      // ฐานจอ
+            new Seed(370.6, 575.3, DEVICE),
+            new Seed(244.3, 611.6, DEVICE),
+            new Seed(143.2, 561.6, DEVICE),      // มุมล่างซ้ายของกรอบจอ
+            new Seed(288.0, 135.0, DEVICE),      // ตัวนาฬิกา
+            new Seed(363.5, 649.8, DEVICE),      // คีย์บอร์ด
+            new Seed(514.3, 652.5, DEVICE),
+            new Seed(611.1, 526.5, DEVICE),      // เมาส์
+            new Seed(580.0, 533.6, DEVICE),
+    };
+
+    private static final Seed[] SAD_PERFRAME = {};
+
+    public static final Scene SCENE_4 = new Scene("sad",
+            new String[] { "test_drawSVG/d.svg" },
+            SAD, SAD_PERFRAME, SAD_DAMS);
 
     /** ลำดับการเล่น - จบซีนหนึ่งแล้วไปซีนถัดไป วนกลับมาซีนแรก */
     public static final Scene[] SCENES = { SCENE_1, SCENE_2, SCENE_3 , SCENE_4};
@@ -254,7 +329,7 @@ public final class ArtConfig {
 		2000, // Scene 2 = 2 วินาที
 		6000,  // Scene 3 = 6 วินาที - ต้องเท่ากับ KmitlBoardDrawable.totalTime() ของซีนนี้
 		       //                      ซีนจะได้ตัดไป Scene 4 ตอนป้ายขาวเต็มจอพอดี
-		2000,  // Scene 4 = 2 วินาที
+		4000,  // Scene 4 = 4 วินาที
 	};
 
     /** เทสีลงเฉพาะพิกเซลขาวล้วน เส้นหมึกและสีที่เทไปแล้วกั้นอยู่ */
@@ -282,6 +357,24 @@ public final class ArtConfig {
             return "shirt";
         if (rgb == (SCREEN.getRGB() & 0xFFFFFF))
             return "screen";
+        if (rgb == (TABLE.getRGB() & 0xFFFFFF))
+            return "table";
+        if (rgb == (INSIDESHIRT.getRGB() & 0xFFFFFF))
+            return "insideshirt";
+        if (rgb == (MOUTH.getRGB() & 0xFFFFFF))
+            return "mouth";
+        if (rgb == (TEAR.getRGB() & 0xFFFFFF))
+            return "tear";
+        if (rgb == (STAR.getRGB() & 0xFFFFFF))
+            return "star";
+        if (rgb == (HAT.getRGB() & 0xFFFFFF))
+            return "hat";
+        if (rgb == (MONITOR.getRGB() & 0xFFFFFF))
+            return "monitor";
+        if (rgb == (DEVICE.getRGB() & 0xFFFFFF))
+            return "device";
+        if (rgb == (PANTS.getRGB() & 0xFFFFFF))
+            return "pants";
         return String.format("#%06X", rgb);
     }
 
