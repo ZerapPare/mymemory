@@ -26,6 +26,8 @@ public final class ArtConfig {
     public static final Color SHIRT = new Color(0x7FA8D4);
     public static final Color INSIDESHIRT = new Color(0xF2EFE7);
     public static final Color SCREEN = new Color(0xDCEBFF);
+    public static final Color MOUTH = new Color(0xFF788D);
+    public static final Color TEAR = new Color(0x30AFFF);
 
     /** จุดเริ่มเทสีหนึ่งจุด พิกัดเป็นหน่วย viewBox ไม่ใช่พิกเซลจอ */
     public static class Seed {
@@ -141,14 +143,29 @@ public final class ArtConfig {
             new Seed(30.0, 30.0, BACKDROP),      // ผนัง
             new Seed(298.9, 451.8, TABLE),       // โต๊ะ - แยกจากผนังได้เพราะเส้นอุด
             new Seed(190.2, 192.0, SHIRT),       // ลำตัว
+            // ดีเทลเสื้อ
+            new Seed(150.6, 136.8, SHIRT),
+            new Seed(185.1, 136.8, SHIRT),
+            new Seed(165.1, 142.4, SHIRT),
+
             new Seed(371.7, 145.3, SHIRT),       // แขนขวาที่ยกขึ้น
             new Seed(297.8, 72.4, HAIR),         // ผม
             new Seed(265.2, 123.5, SKIN),        // ใบหน้า
             new Seed(306.5, 114.8, SKIN),        // ตา
             new Seed(81.5, 75.7, SKIN),          // กำปั้นซ้าย
             new Seed(458.7, 52.9, SKIN),         // กำปั้นขวา
-            new Seed(270.7, 197.4, INSIDESHIRT), // คอเสื้อ
-            new Seed(253.3, 165.9, INSIDESHIRT), // ปกเสื้อ
+            //นิ้วแขนซ้าย
+            new Seed(89.2, 24.2, SKIN),
+            new Seed(101.5, 36.4, SKIN),
+            //นิ้วแขนขวา
+            new Seed(459.5, 11.9, SKIN),
+            new Seed(470.6, 20.8, SKIN),
+            new Seed(469.5, 34.2, SKIN),
+            new Seed(480.7, 38.7, SKIN),
+            new Seed(462.8, 34.2, SKIN),
+            new Seed(293.3, 158.0, MOUTH),        // ปาก
+            new Seed(290.0, 131.2, TEAR),
+            new Seed(229.7, 163.6, INSIDESHIRT), // ข้างในเสื้อ
             new Seed(401.1, 293.1, SCREEN),      // จอแท็บเล็ต
             new Seed(400.0, 312.7, SCREEN),      // ไอคอนบนจอ
     };
