@@ -8,9 +8,7 @@ import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Flood Fill / Rasterization Engine
@@ -25,9 +23,15 @@ public final class FillEngine {
     private FillEngine() {
     }
 
-    /** วาดเฉพาะพื้นหลัง (SVG + flood fill) ไม่รวม Drawable */
-    public static BufferedImage rasteriseBackground(Path2D path, int frameIndex,
-            AffineTransform at, int w, int h, boolean colorOn) {
+    /**
+     * วาดเฉพาะพื้นหลัง (SVG + flood fill) ไม่รวม Drawable
+     *
+     * รับ seed กับเส้นอุดเข้ามาเป็นพารามิเตอร์ ไม่ไปหยิบจาก ArtConfig เอง
+     * แต่ละซีนจึงส่งชุดของตัวเองมาได้ และไม่มีการอ้าง seed ด้วย index อีก
+     * (เดิมเช็ค frameIndex < SCREEN_PER_FRAME.length ซึ่งถ้าลืมเพิ่มจะเงียบ)
+     */
+    public static BufferedImage rasteriseBackground(Path2D path, ArtConfig.Seed[] seeds,
+            double[][] dams, AffineTransform at, int w, int h, boolean colorOn) {
 
         BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = img.createGraphics();
@@ -47,7 +51,7 @@ public final class FillEngine {
                 BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
         Point2D.Double p1 = new Point2D.Double();
         Point2D.Double p2 = new Point2D.Double();
-        for (double[] d : ArtConfig.DAMS) {
+        for (double[] d : dams) {
             p1.setLocation(d[0], d[1]);
             p2.setLocation(d[2], d[3]);
             at.transform(p1, p1);
@@ -61,11 +65,6 @@ public final class FillEngine {
 
         int[] px = ((DataBufferInt) img.getRaster().getDataBuffer()).getData();
         int radius = Math.max(2, (int) Math.round(1.5 * s(at)));
-
-        List<ArtConfig.Seed> seeds = new ArrayList<>(Arrays.asList(ArtConfig.COMMON));
-        if (frameIndex < ArtConfig.SCREEN_PER_FRAME.length) {
-            seeds.add(ArtConfig.SCREEN_PER_FRAME[frameIndex]);
-        }
 
         Point2D.Double p = new Point2D.Double();
         for (ArtConfig.Seed seed : seeds) {

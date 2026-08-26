@@ -42,62 +42,88 @@ public class MultiSvgAnimationApp extends JPanel {
     private boolean paused = false;
     private int frameCounter = 0;        // นับจำนวน tick
 
+    /** ซีนที่กำลังเล่น - seed กับเส้นอุดมาจากตัวนี้ ไม่ใช่จากค่ากลาง */
+    private ArtConfig.Scene scene;
+    private int sceneIndex = 0;
+
     private String pickText = "click to pick a point";
 
     // =================== Constructor ===================
-    public MultiSvgAnimationApp(String[] filePaths) {
-        for (String filePath : filePaths) {
-            Path2D path = SvgLoader.loadSvg(filePath);
-            if (path != null) {
-                FrameData fd = new FrameData(path);
-                // ***** เพิ่ม Drawable ต่าง ๆ ลงในเฟรมนี้ *****
-                fd.drawables.add(new WallClockDrawable(92, 70, 0.25));
-
-				fd.drawables.add(new DeskDecorDrawable());
-				fd.drawables.add(new WindowBackgroundDrawable());
-                // ชั้นวางต้นไม้ใต้นาฬิกา (กึ่งกลาง x, ระดับแผ่นชั้น, สเกล)
-                fd.drawables.add(new PlantShelfDrawable(92, 180, 1.0));
-
-                // สามารถเพิ่ม object อื่น ๆ ได้อีก เช่น
-                // fd.drawables.add(new AnotherDrawable(...));
-                // ------------------------------------------
-                frames.add(fd);
-                String n = new File(filePath).getName();
-                names.add(n.endsWith(".svg") ? n.substring(0, n.length() - 4) : n);
-            }
-        }
-
+    public MultiSvgAnimationApp(int startScene) {
         setOpaque(true);
         setBackground(Color.WHITE);
         installKeys();
         installPicker();
 
-        if (!frames.isEmpty()) {
-		timer = new Timer(ArtConfig.TICK_INTERVAL, e -> {
-			if (!paused) {
-				frameCounter += ArtConfig.TICK_INTERVAL;
-				if (frameCounter >= ArtConfig.FRAME_INTERVAL) {
-					frameCounter = 0;
-					
-					// === ตรวจสอบว่าเป็นเฟรมสุดท้ายหรือไม่ (ก่อนเปลี่ยน) ===
-					int oldIndex = currentIndex;
-					int nextIndex = (currentIndex + 1) % frames.size();
-					
-					// ถ้า oldIndex เป็นเฟรมสุดท้าย และ nextIndex เป็นเฟรมแรก (0)
-					if (oldIndex == frames.size() - 1 && nextIndex == 0) {
-						// เรียกโหลดฉากต่อไป
-						loadNewScene(ArtConfig.SCENE_2_FILES); // ต้องไปกำหนดใน ArtConfig
-						// หลังจากโหลดฉากใหม่เสร็จ currentIndex จะถูกรีเซ็ตเป็น 0 ใน loadNewScene
-						// เราจึงไม่ต้อง set currentIndex อีก
-					} else {
-						currentIndex = nextIndex;
-					}
-				}
-			}
-			repaint();
-		});
-		timer.start();
-	}
+        timer = new Timer(ArtConfig.TICK_INTERVAL, e -> {
+            if (!paused) {
+                frameCounter += ArtConfig.TICK_INTERVAL;
+                if (frameCounter >= ArtConfig.FRAME_INTERVAL) {
+                    frameCounter = 0;
+                    if (currentIndex + 1 >= frames.size()) {
+                        // จบซีนแล้ว ไปซีนถัดไป วนกลับมาซีนแรก
+                        loadScene((sceneIndex + 1) % ArtConfig.SCENES.length);
+                    } else {
+                        currentIndex++;
+                    }
+                }
+            }
+            repaint();
+        });
+
+        loadScene(startScene);
+        timer.start();
+    }
+
+    /**
+     * สลับซีน - โหลดไฟล์ของซีนนั้น แล้วทิ้ง cache พื้นหลังทั้งหมด
+     *
+     * ต้องตั้ง lastW = -1 ด้วย ไม่งั้น ensureBackgrounds เห็นว่าขนาดหน้าต่าง
+     * ไม่เปลี่ยนแล้ว return ทันที จะได้ภาพซีนเก่าค้าง
+     */
+    public void loadScene(int index) {
+        ArtConfig.Scene next = ArtConfig.SCENES[index];
+
+        List<FrameData> loaded = new ArrayList<>();
+        List<String> loadedNames = new ArrayList<>();
+        for (String filePath : next.files) {
+            Path2D path = SvgLoader.loadSvg(filePath);
+            if (path == null) {
+                System.err.println("[scene] " + next.name + ": อ่าน " + filePath + " ไม่ได้ - ข้าม");
+                continue;
+            }
+            FrameData fd = new FrameData(path);
+            addProps(fd);
+            loaded.add(fd);
+            String n = new File(filePath).getName();
+            loadedNames.add(n.endsWith(".svg") ? n.substring(0, n.length() - 4) : n);
+        }
+
+        if (loaded.isEmpty()) {
+            // ซีนว่างเปล่า - อยู่ซีนเดิมดีกว่าจอดำ
+            System.err.println("[scene] " + next.name + " ไม่มีเฟรมที่โหลดได้เลย - ไม่สลับ");
+            return;
+        }
+
+        scene = next;
+        sceneIndex = index;
+        frames.clear();
+        frames.addAll(loaded);
+        names.clear();
+        names.addAll(loadedNames);
+        backgrounds.clear();
+        currentIndex = 0;
+        frameCounter = 0;
+        lastW = -1;              // บังคับสร้างพื้นหลังใหม่
+    }
+
+    /** ของประกอบฉากที่วาดทับทุกเฟรม */
+    private void addProps(FrameData fd) {
+        fd.drawables.add(new WallClockDrawable(92, 70, 0.25));
+        fd.drawables.add(new DeskDecorDrawable());
+        fd.drawables.add(new WindowBackgroundDrawable());
+        // ชั้นวางต้นไม้ใต้นาฬิกา (กึ่งกลาง x, ระดับแผ่นชั้น, สเกล)
+        fd.drawables.add(new PlantShelfDrawable(92, 180, 1.0));
     }
 
     // =================== paintComponent ===================
@@ -132,10 +158,11 @@ public class MultiSvgAnimationApp extends JPanel {
                 RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
         g.setColor(new Color(0x66000000, true));
-        g.drawString((currentIndex < names.size() ? names.get(currentIndex) : "?")
+        g.drawString((scene != null ? scene.name + " / " : "")
+                + (currentIndex < names.size() ? names.get(currentIndex) : "?")
                 + (paused ? "  [stop]" : "")
                 + "  |  " + (colorOn ? "color" : "line")
-                + "  |  SPACE=stop  LEFT/RIGHT=change frame  C=switch color", 10, 18);
+                + "  |  SPACE=stop  LEFT/RIGHT=frame  N=scene  C=color", 10, 18);
         g.setColor(new Color(0xCC0033AA, true));
         g.drawString(pickText, 10, 34);
     }
@@ -153,7 +180,9 @@ public class MultiSvgAnimationApp extends JPanel {
 
         backgrounds.clear();
         for (int i = 0; i < frames.size(); i++) {
-            backgrounds.add(FillEngine.rasteriseBackground(frames.get(i).svgPath, i, at, w, h, colorOn));
+            // seed กับเส้นอุดมาจากซีนปัจจุบัน ไม่ใช่จากค่ากลาง
+            backgrounds.add(FillEngine.rasteriseBackground(
+                    frames.get(i).svgPath, scene.seedsFor(i), scene.dams, at, w, h, colorOn));
         }
         lastW = w;
         lastH = h;
@@ -201,6 +230,14 @@ public class MultiSvgAnimationApp extends JPanel {
         });
         bind("LEFT", () -> step(-1));
         bind("RIGHT", () -> step(1));
+        bind("N", () -> {
+            // สลับซีนด้วยมือ - หยุดไว้ก่อนจะได้ดูทัน
+            if (!paused) {
+                paused = true;
+                if (timer != null) timer.stop();
+            }
+            loadScene((sceneIndex + 1) % ArtConfig.SCENES.length);
+        });
         bind("C", () -> {
             colorOn = !colorOn;
             lastW = -1; // บังคับสร้างพื้นหลังใหม่
@@ -229,44 +266,12 @@ public class MultiSvgAnimationApp extends JPanel {
         });
     }
 
-	public void loadNewScene(String[] newFiles) {
-		// หยุด Timer เก่า
-		if (timer != null) timer.stop();
-		
-		// เคลียร์ข้อมูลเก่า
-		frames.clear();
-		names.clear();
-		backgrounds.clear();
-		currentIndex = 0;
-		frameCounter = 0;
-		lastW = -1;
-		
-		// โหลดไฟล์ใหม่
-		for (String filePath : newFiles) {
-			Path2D path = SvgLoader.loadSvg(filePath);
-			if (path != null) {
-				FrameData fd = new FrameData(path);
-				// ใส่ Drawable สำหรับฉากใหม่นี้ (อาจต่างจากเก่า)
-				fd.drawables.add(new WallClockDrawable(92, 70, 0.25));
-				// ... เพิ่มของใหม่ตามต้องการ
-				frames.add(fd);
-				names.add(new File(filePath).getName());
-			}
-		}
-		
-		// เริ่ม Timer ใหม่
-		if (!frames.isEmpty()) {
-			timer.start();
-		}
-		repaint();
-	}
-
     // =================== main ===================
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Multi-Frame SVG with Drawable Objects");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.add(new MultiSvgAnimationApp(ArtConfig.FILES));
+            frame.add(new MultiSvgAnimationApp(0));
             frame.setSize(600, 600);
             frame.setLocationRelativeTo(null);
             frame.setVisible(true);
