@@ -58,7 +58,7 @@ public class MultiSvgAnimationApp extends JPanel {
 
     // =================== Constructor ===================
     public MultiSvgAnimationApp(int startScene) {
-        setOpaque(true);
+        setOpaque(true); // กำหนดให้พื้นหลังทึบแสง
         setBackground(Color.WHITE);
         installKeys();
         installPicker();
@@ -113,8 +113,8 @@ public class MultiSvgAnimationApp extends JPanel {
     public void loadScene(int index) {
         ArtConfig.Scene next = ArtConfig.SCENES[index];
 
-        List<FrameData> loaded = new ArrayList<>();
-        List<String> loadedNames = new ArrayList<>();
+        List<FrameData> loaded = new ArrayList<>(); // เก็บ FrameData ของซีนนี้
+        List<String> loadedNames = new ArrayList<>(); // เก็บชื่อไฟล์ของซีนนี้
         for (String filePath : next.files) {
             Path2D path = SvgLoader.loadSvg(filePath);
             if (path == null) continue;
@@ -124,7 +124,7 @@ public class MultiSvgAnimationApp extends JPanel {
 			}
             loaded.add(fd);
             String n = new File(filePath).getName();
-            loadedNames.add(n.endsWith(".svg") ? n.substring(0, n.length() - 4) : n);
+            // loadedNames.add(n.endsWith(".svg") ? n.substring(0, n.length() - 4) : n); // ตัด .svg ออก เพื่อเอาไปแสดงบน HUD ซึ่ง เป็น ASCII ล้วน
         }
 
         if (loaded.isEmpty()) return;
@@ -197,6 +197,26 @@ public class MultiSvgAnimationApp extends JPanel {
         }
 
         drawHud(canvas);
+
+		Graphics2D smoothG = (Graphics2D) g;
+
+        smoothG.setRenderingHint(
+            RenderingHints.KEY_ANTIALIASING,
+            RenderingHints.VALUE_ANTIALIAS_ON
+        );
+
+        smoothG.setRenderingHint(
+            RenderingHints.KEY_RENDERING,
+            RenderingHints.VALUE_RENDER_QUALITY
+        );
+
+        smoothG.setRenderingHint(
+            RenderingHints.KEY_STROKE_CONTROL,
+            RenderingHints.VALUE_STROKE_PURE
+        );
+
+        smoothG.setColor(Color.BLACK);
+
 
         // เอาผืนผ้าใบขึ้นจอ - คำสั่ง Java2D ตัวเดียวที่เหลือในโปรเจกต์
         // ไม่ได้วาดรูปทรงอะไรให้ แค่คัดลอกบิตแมปที่เราพล็อตเองทั้งใบ
