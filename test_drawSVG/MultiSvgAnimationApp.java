@@ -37,6 +37,9 @@ public class MultiSvgAnimationApp extends JPanel {
 
     /** พื้นหลังที่เรนเดอร์แล้ว (Cache) หนึ่งใบต่อเฟรม */
     private final List<BufferedImage> backgrounds = new ArrayList<>();
+
+    /** ผืนผ้าใบของเราเอง - ทุกพิกเซลที่ออกจอผ่าน plot() ของตัวนี้ */
+    private Raster canvas;
     private int lastW = -1, lastH = -1;
     private boolean colorOn = true;
 
@@ -155,51 +158,60 @@ public class MultiSvgAnimationApp extends JPanel {
         super.paintComponent(g);
         if (frames.isEmpty()) return;
 
-        Graphics2D g2 = (Graphics2D) g;
-
-		g2.setRenderingHint(
-			RenderingHints.KEY_ANTIALIASING,
-			RenderingHints.VALUE_ANTIALIAS_ON
-		);
-
-		g2.setRenderingHint(
-			RenderingHints.KEY_RENDERING,
-			RenderingHints.VALUE_RENDER_QUALITY
-		);
-
+        int w = getWidth(), h = getHeight();
         double time = System.currentTimeMillis() / 1000.0;
 
-        ensureBackgrounds(getWidth(), getHeight());
+        ensureBackgrounds(w, h);
         FrameData fd = frames.get(currentIndex);
+
+        // ผืนผ้าใบของเราเอง - ทุกพิกเซลที่ออกจอผ่าน Raster.plot() ทั้งหมด
+        // ใช้ซ้ำจนกว่าขนาดหน้าต่างจะเปลี่ยน จะได้ไม่ต้องจองใหม่ทุก 30ms
+        if (canvas == null || canvas.w != w || canvas.h != h) {
+            canvas = new Raster(w, h);
+        }
 
         // 1. สีผนัง - เดิมมาจาก flood fill ตอนนี้ย้ายมาถมพื้น panel แทน
         //    เพราะผนังในภาพตัวละครถูกทำให้โปร่งไปแล้ว
-        g2.setColor(ArtConfig.BACKDROP);
-        g2.fillRect(0, 0, getWidth(), getHeight());
+        canvas.clear(ArtConfig.BACKDROP.getRGB());
 
         // 2. props ที่ติดผนัง - วาดก่อน ตัวละครจะได้บังได้
         for (Drawable d : fd.behind) {
-            d.draw(g2, time);
+            d.draw(canvas, time);
         }
 
         // 3. ตัวละคร - ผนังโปร่ง props ข้างหลังจึงทะลุขึ้นมา
         if (currentIndex < backgrounds.size()) {
-            g.drawImage(backgrounds.get(currentIndex), 0, 0, null);
+            blit(canvas, backgrounds.get(currentIndex));
         }
 
         // 4. props ที่อยู่หน้าคน
         for (Drawable d : fd.front) {
-            d.draw(g2, time);
+            d.draw(canvas, time);
         }
 
         // 5. Render Component Overlay หมุนขยายทับข้างบน
         //    ใช้ sceneElapsedTime ไม่ใช่ time - นาฬิกาเรือนเดียวกับที่ตัดซีน
         if (zoomingOverlay != null) {
-            zoomingOverlay.setPanelSize(getWidth(), getHeight());
-            zoomingOverlay.draw(g2, sceneElapsedTime / 1000.0);
+            zoomingOverlay.setPanelSize(w, h);
+            zoomingOverlay.draw(canvas, sceneElapsedTime / 1000.0);
         }
 
-        drawHud(g2);
+        drawHud(canvas);
+
+        // เอาผืนผ้าใบขึ้นจอ - คำสั่ง Java2D ตัวเดียวที่เหลือในโปรเจกต์
+        // ไม่ได้วาดรูปทรงอะไรให้ แค่คัดลอกบิตแมปที่เราพล็อตเองทั้งใบ
+        g.drawImage(canvas.image(), 0, 0, null);
+    }
+
+    /** วางภาพตัวละครที่ cache ไว้ลงผืนผ้าใบ ผ่าน plot() ทีละจุดเหมือนกัน */
+    private static void blit(Raster r, BufferedImage img) {
+        int iw = Math.min(r.w, img.getWidth());
+        int ih = Math.min(r.h, img.getHeight());
+        for (int y = 0; y < ih; y++) {
+            for (int x = 0; x < iw; x++) {
+                r.plot(x, y, img.getRGB(x, y));
+            }
+        }
     }
 
 
@@ -217,18 +229,14 @@ public class MultiSvgAnimationApp extends JPanel {
 
     // =================== paintComponent ===================
     
-    private void drawHud(Graphics2D g) {
-        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
-                RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        g.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 12));
-        g.setColor(new Color(0x66000000, true));
-        g.drawString((scene != null ? scene.name + " / " : "")
+    /** HUD เขียนด้วยฟอนต์บิตแมปที่พล็อตเอง ไม่ใช่ drawString - ต้องเป็น ASCII ล้วน */
+    private void drawHud(Raster r) {
+        Gfx.text(r, 10, 10, (scene != null ? scene.name + " / " : "")
                 + (currentIndex < names.size() ? names.get(currentIndex) : "?")
                 + (paused ? "  [stop]" : "")
                 + "  |  " + (colorOn ? "color" : "line")
-                + "  |  SPACE=stop  LEFT/RIGHT=frame  N=scene  C=color", 10, 18);
-        g.setColor(new Color(0xCC0033AA, true));
-        g.drawString(pickText, 10, 34);
+                + "  |  SPACE=stop  LEFT/RIGHT=frame  N=scene  C=color", 0x66000000);
+        Gfx.text(r, 10, 22, pickText, 0xCC0033AA);
     }
 
     // =================== สร้างพื้นหลัง (Cache) ===================
@@ -296,7 +304,8 @@ public class MultiSvgAnimationApp extends JPanel {
         if (currentIndex < backgrounds.size() && px >= 0 && px < w && py >= 0 && py < h) {
             int argb = backgrounds.get(currentIndex).getRGB(px, py);
             // พิกเซลโปร่งมี RGB = 0 ซึ่งชนกับสีหมึกดำ ต้องเช็ค alpha ก่อน
-            what = (argb >>> 24) == 0 ? "wall (โปร่ง)" : ArtConfig.describe(argb & 0xFFFFFF);
+            // HUD ใช้ฟอนต์บิตแมป ASCII ข้อความจึงต้องเป็นอังกฤษ
+            what = (argb >>> 24) == 0 ? "wall (transparent)" : ArtConfig.describe(argb & 0xFFFFFF);
         }
 
         pickText = String.format("%s  (%.1f, %.1f)  %s", frame, ux, uy, what);

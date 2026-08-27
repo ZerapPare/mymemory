@@ -1,81 +1,67 @@
-import java.awt.*;
-import java.awt.geom.Path2D;
+import java.awt.Color;
 
+/**
+ * ของบนโต๊ะ - ลำแสงแดดเฉียง กับแก้วกาแฟที่มีควันลอย
+ *
+ * ลำแสงกับควันใช้สีโปร่ง ซึ่ง Raster.plot() ผสม alpha ให้เอง
+ */
 public class DeskDecorDrawable implements Drawable {
 
     @Override
-    public void draw(Graphics2D g, double time) {
-        Rectangle bounds = g.getClipBounds();
-        int width = (bounds != null) ? bounds.width : 600;
-        int height = (bounds != null) ? bounds.height : 600;
-
-        // เปิด Anti-aliasing เพื่อความเนียน
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        // 1. วาดแสงแดดเฉียงส่องจากหน้าต่างลงมาที่โต๊ะ
-        drawSunlight(g, width, height);
-
-        // 2. วาดแก้วกาแฟพร้อมควนลอย (ขยับตามเวลา time)
-        drawCoffeeCup(g, width, height, time);
+    public void draw(Raster r, double time) {
+        drawSunlight(r, r.w, r.h);
+        drawCoffeeCup(r, r.w, r.h, time);
     }
 
-    private void drawSunlight(Graphics2D g, int w, int h) {
-        // ตำแหน่งหน้าต่างขวาบน
-        int winX = w - (int)(w * 0.28) - 15;
+    private void drawSunlight(Raster r, int w, int h) {
+        // ตำแหน่งหน้าต่างขวาบน ต้องตรงกับ WindowBackgroundDrawable
+        int winX = w - (int) (w * 0.28) - 15;
         int winY = 15;
-        int winW = (int)(w * 0.28);
-        int winH = (int)(h * 0.32);
+        int winW = (int) (w * 0.28);
+        int winH = (int) (h * 0.32);
 
-        // ลำแสงแดดสีขาวโปร่งแสง (Alpha = 25)
-        g.setColor(new Color(255, 255, 200, 25));
-
-        Path2D lightBeam = new Path2D.Double();
-        lightBeam.moveTo(winX, winY + (winH * 0.3));             // จุดเริ่มบนซ้ายหน้าต่าง
-        lightBeam.lineTo(winX + winW, winY + winH);              // มุมขวาล่างหน้าต่าง
-        lightBeam.lineTo(winX - (w * 0.2), h);                   // พาดเฉียงลงมาพื้น/โต๊ะซ้าย
-        lightBeam.lineTo(winX - (w * 0.4), h * 0.65);            // ปลายแสงด้านซ้าย
-        lightBeam.closePath();
-
-        g.fill(lightBeam);
+        // ลำแสงแดดสีขาวโปร่งแสง (alpha 25)
+        double[] beam = {
+                winX, winY + (winH * 0.3),          // จุดเริ่มบนซ้ายหน้าต่าง
+                winX + winW, winY + winH,           // มุมขวาล่างหน้าต่าง
+                winX - (w * 0.2), h,                // พาดเฉียงลงมาพื้น/โต๊ะซ้าย
+                winX - (w * 0.4), h * 0.65,         // ปลายแสงด้านซ้าย
+        };
+        Gfx.scanlineFill(r, beam, null, (25 << 24) | 0xFFFFC8);
     }
 
-    private void drawCoffeeCup(Graphics2D g, int w, int h, double time) {
-		int cupX = (int) (w * 0.40); 
-		int cupY = (int) (h * 0.75); 
+    private void drawCoffeeCup(Raster r, int w, int h, double time) {
+        int cupX = (int) (w * 0.40);
+        int cupY = (int) (h * 0.75);
+        int cupW = 42;
+        int cupH = 50;
 
-		int cupW = 42; 
-		int cupH = 50;
+        // เงาใต้แก้ว
+        Gfx.fillEllipse(r, cupX - 5 + (cupW + 10) / 2, cupY + cupH - 5 + 7,
+                (cupW + 10) / 2, 7, 0x40000000);
 
-		g.setColor(new Color(0x40000000, true));
-		g.fillOval(cupX - 5, cupY + cupH - 5, cupW + 10, 14);
+        double[] cup = Gfx.roundRect(cupX, cupY, cupW, cupH, 10, 10);
+        Gfx.scanlineFill(r, cup, null, Raster.argb(new Color(0xF0F0F0)));
 
-		g.setColor(new Color(0xF0F0F0));
-		g.fillRoundRect(cupX, cupY, cupW, cupH, 10, 10);
+        int rim = Raster.argb(new Color(0x332B25));
+        Gfx.polyline(r, cup, true, 2, rim);
 
-		// เส้นขอบแก้ว (เพิ่มความหนาเส้นตามขนาด)
-		g.setColor(new Color(0x332B25));
-		g.setStroke(new BasicStroke(2.0f));
-		g.drawRoundRect(cupX, cupY, cupW, cupH, 10, 10);
+        // หูจับแก้ว - ส่วนโค้งครึ่งวงทางขวา ตรงกับ drawArc(-90, 180) เดิม
+        Gfx.polyline(r, Gfx.arcPoints(cupX + cupW - 4 + 7, cupY + 10 + 12, 7, 12, -90, 180),
+                false, 2, rim);
 
-		// หูจับแก้ว (ปรับขนาดให้รับกับตัวแก้ว)
-		g.drawArc(cupX + cupW - 4, cupY + 10, 14, 24, -90, 180);
+        // ควันกาแฟ - Bézier กำลังสามที่ส่ายตามเวลา
+        int steamColor = (120 << 24) | 0xC8C8C8;
+        for (int i = 0; i < 2; i++) {
+            double offsetX = (i == 0) ? 12 : 26;
+            double wave = Math.sin(time * 2.5 + i * 1.5) * 6;
 
-		// C. ควันกาแฟ (ปรับระยะความสูงควันให้ลอยสูงขึ้น)
-		g.setColor(new Color(200, 200, 200, 120));
-		g.setStroke(new BasicStroke(2.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-
-		for (int i = 0; i < 2; i++) {
-			double offsetX = (i == 0) ? 12 : 26; // ขยับระยะห่างควัน
-			double wave = Math.sin(time * 2.5 + i * 1.5) * 6; 
-
-			Path2D steam = new Path2D.Double();
-			steam.moveTo(cupX + offsetX, cupY - 6);
-			steam.curveTo(
-				cupX + offsetX + wave, cupY - 18,
-				cupX + offsetX - wave, cupY - 30,
-				cupX + offsetX + (wave / 2), cupY - 42 // ปรับให้ควันลอยสูงขึ้น
-			);
-			g.draw(steam);
-		}
-	}
+            double[] steam = Gfx.bezier3(
+                    cupX + offsetX, cupY - 6,
+                    cupX + offsetX + wave, cupY - 18,
+                    cupX + offsetX - wave, cupY - 30,
+                    cupX + offsetX + (wave / 2), cupY - 42, 20);
+            Gfx.polyline(r, steam, false, 2.5, steamColor);
+        }
+    }
 }

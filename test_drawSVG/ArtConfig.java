@@ -341,8 +341,7 @@ public final class ArtConfig {
 	public static final int[] SCENE_DURATION = {
 		5000, // Scene 1 = 5 วินาที
 		2000, // Scene 2 = 2 วินาที
-		6000,  // Scene 3 = 6 วินาที - ต้องเท่ากับ KmitlBoardDrawable.totalTime() ของซีนนี้
-		       //                      ซีนจะได้ตัดไป Scene 4 ตอนป้ายขาวเต็มจอพอดี
+		6000,  // Scene 3 = 6 วินาที 
 		4000,  // Scene 4 = 4 วินาที
 	};
 

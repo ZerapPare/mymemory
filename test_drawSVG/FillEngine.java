@@ -1,13 +1,7 @@
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
 import java.util.Arrays;
 
 /**
@@ -15,8 +9,8 @@ import java.util.Arrays;
  *
  * รับ Path2D แล้วคืนภาพลายเส้นที่ลงสีเสร็จแล้ว (ยังไม่รวม Drawable)
  *
- * ที่ต้องเรนเดอร์ลง BufferedImage เพราะ flood fill ต้อง "อ่าน" พิกเซลกลับมา
- * ซึ่ง Graphics2D ของ panel ทำไม่ได้ - ตัวนี้ไม่รู้จัก Swing รู้แค่พิกเซล
+ * ทุกพิกเซลในภาพมาจาก Raster.plot() ผ่าน Gfx ไม่มีคำสั่งวาดของ Java2D เหลืออยู่
+ * ที่ต้องเรนเดอร์ลง Raster ก่อน เพราะ flood fill ต้อง "อ่าน" พิกเซลกลับมา
  */
 public final class FillEngine {
 
@@ -28,29 +22,26 @@ public final class FillEngine {
      *
      * รับ seed กับเส้นอุดเข้ามาเป็นพารามิเตอร์ ไม่ไปหยิบจาก ArtConfig เอง
      * แต่ละซีนจึงส่งชุดของตัวเองมาได้ และไม่มีการอ้าง seed ด้วย index อีก
-     * (เดิมเช็ค frameIndex < SCREEN_PER_FRAME.length ซึ่งถ้าลืมเพิ่มจะเงียบ)
      */
     public static BufferedImage rasteriseBackground(Path2D path, ArtConfig.Seed[] seeds,
             double[][] dams, AffineTransform at, int w, int h, boolean colorOn) {
 
         // ARGB ไม่ใช่ RGB เพราะตอนท้ายจะทำบริเวณผนังให้โปร่ง
         // props ที่วาดไว้ก่อนหน้าจะได้ทะลุขึ้นมาได้ ตัวละครจึงอยู่หน้า props
-        BufferedImage img = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g = img.createGraphics();
-        g.setColor(Color.WHITE);
-        g.fillRect(0, 0, w, h);
+        Raster r = new Raster(w, h);
+        r.clear(0xFF000000 | ArtConfig.BLANK);
 
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-        g.setStroke(new BasicStroke(1f));
-        g.setColor(Color.BLACK);
+        int ink = 0xFF000000;
 
-        Shape sh = at.createTransformedShape(path);
-        g.fill(sh);
-        g.draw(sh);
+        // ---- ลายเส้นตัวละคร ----
+        // ต้องทั้งถมและลากขอบ - เส้น potrace เป็นสลิ่วบางที่แค่แตะกัน ถมอย่างเดียว
+        // เหลือรูจิ๋วให้สีลอดทะลุ (ดู docs/setup.md หัวข้อ "สามข้อที่ห้ามแตะ")
+        Gfx.Contours c = Gfx.contours(at.createTransformedShape(path));
+        Gfx.scanlineFill(r, c.pts, c.ends, ink);
+        Gfx.strokeContours(r, c, 1, ink);
 
-        // เส้นอุด (DAMS)
-        g.setStroke(new BasicStroke((float) Math.max(3, ArtConfig.DAM_WIDTH * s(at)),
-                BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        // ---- เส้นอุด (DAMS) ----
+        double damW = Math.max(3, ArtConfig.DAM_WIDTH * at.getScaleX());
         Point2D.Double p1 = new Point2D.Double();
         Point2D.Double p2 = new Point2D.Double();
         for (double[] d : dams) {
@@ -58,15 +49,14 @@ public final class FillEngine {
             p2.setLocation(d[2], d[3]);
             at.transform(p1, p1);
             at.transform(p2, p2);
-            g.drawLine((int) Math.round(p1.x), (int) Math.round(p1.y),
-                       (int) Math.round(p2.x), (int) Math.round(p2.y));
+            Gfx.thickLine(r, p1.x, p1.y, p2.x, p2.y, damW, ink);
         }
-        g.dispose();
 
-        if (!colorOn) return img;
+        if (!colorOn) return r.image();
 
-        int[] px = ((DataBufferInt) img.getRaster().getDataBuffer()).getData();
-        int radius = Math.max(2, (int) Math.round(1.5 * s(at)));
+        // ---- ลงสีทีละ seed ----
+        int[] px = r.px;
+        int radius = Math.max(2, (int) Math.round(1.5 * at.getScaleX()));
 
         Point2D.Double p = new Point2D.Double();
         for (ArtConfig.Seed seed : seeds) {
@@ -86,7 +76,7 @@ public final class FillEngine {
         }
 
         makeWallTransparent(px);
-        return img;
+        return r.image();
     }
 
     /**
@@ -111,15 +101,12 @@ public final class FillEngine {
 
     /** ภาพนี้มีพิกเซลโปร่งบ้างไหม - ใช้เช็คว่าซีนลืม seed BACKDROP หรือเปล่า */
     public static boolean hasTransparent(BufferedImage img) {
-        int[] px = ((DataBufferInt) img.getRaster().getDataBuffer()).getData();
-        for (int p : px) {
-            if ((p >>> 24) == 0) return true;
+        for (int y = 0; y < img.getHeight(); y++) {
+            for (int x = 0; x < img.getWidth(); x++) {
+                if ((img.getRGB(x, y) >>> 24) == 0) return true;
+            }
         }
         return false;
-    }
-
-    private static double s(AffineTransform at) {
-        return at.getScaleX();
     }
 
     // =================== Flood Fill ===================

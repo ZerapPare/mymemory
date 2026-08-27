@@ -1,10 +1,12 @@
-import java.awt.Graphics2D;
-
 /**
  * ของที่วาดทับลงบนภาพ SVG ที่ลงสีแล้ว
  *
+ * วาดลง Raster ไม่ใช่ Graphics2D - ทุกพิกเซลต้องผ่าน plot() ตามข้อกำหนด
+ * ห้ามใช้คำสั่งวาดรูปทรงสำเร็จรูป ใช้ Gfx เป็นตัวช่วย
+ *
  * time เป็นวินาที (เวลาจริง) ตัวที่ไม่ขยับก็ไม่ต้องสนใจค่านี้
+ * ขนาดผืนผ้าใบอ่านได้จาก r.w / r.h ไม่ต้องพึ่ง getClipBounds เหมือนเดิม
  */
 public interface Drawable {
-    void draw(Graphics2D g, double time);
+    void draw(Raster r, double time);
 }
