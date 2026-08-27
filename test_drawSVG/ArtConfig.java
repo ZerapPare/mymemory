@@ -34,6 +34,7 @@ public final class ArtConfig {
     public static final Color DEVICE = new Color(0xC9D1DA);
     public static final Color PANTS = new Color(0x4A5568);
     public static final Color CHAIR = new Color(0x4A4A4A);
+    public static final Color DARKCIRCLE = new Color(0x2C2C2C);
 
 
     /** จุดเริ่มเทสีหนึ่งจุด พิกัดเป็นหน่วย viewBox ไม่ใช่พิกเซลจอ */
@@ -246,11 +247,11 @@ public final class ArtConfig {
             CELEBRATING, CELEBRATING_FISTS, ROOM_DAMS);
 	
     private static final double[][] SAD_DAMS = {
-            { 6.7, 630.5, -70.9, 660.7 },        // ขอบซ้าย - คั่นผนังกับโต๊ะ
-            { 461.5, 425, 461.5, -240 },     // ขอบขวา - คั่นผนังกับแขน
-            { 564.3, 253.5, 577.7, 246.8 }, // ขอบขวา - คั่นแขนกับเก้าอี้/โต๊ะ
-            {1197, 336, 1197, 385}, // ขอบขวา - คั่นแขนกับเก้าอี้/โต๊ะ
-            { 550, 764.3, 1249.1, 768.8}     // ขอบล่าง
+            { 6.7, 630.5, -70.9, 660.7 },       
+            { 461.5, 425, 461.5, -240 },    
+            // { 564.3, 253.5, 577.7, 246.8 }, 
+            {1197, 336, 1197, 385}, 
+            { 550, 764.3, 1249.1, 768.8}     
             
     };
 
@@ -260,10 +261,10 @@ public final class ArtConfig {
             new Seed(421.2, 507.8, TABLE),       // แผงโต๊ะที่ยกขึ้นหลังคีย์บอร์ด
             new Seed(659.0, 135.0, HAIR),        // ผม
             new Seed(651.9, 295.7, SKIN),        // ใบหน้า
-            new Seed(615.5, 245.1, SKIN),        // เลนส์แว่น
+            new Seed(615.5, 245.1, DARKCIRCLE),        // เลนส์แว่น
             new Seed(757.5, 239.8, SHIRT),        // หู + ข้างคอ
-            new Seed(546.5, 251.3, SKIN),        // หู + ข้างคอ
-            new Seed(559.9, 273.6, SKIN),        // หู + ข้างคอ
+            new Seed(546.5, 251.3, DARKCIRCLE),        // หู + ข้างคอ
+            new Seed(559.9, 273.6, DARKCIRCLE),        // หู + ข้างคอ
             new Seed(700.4, 166.5, SKIN),        // หู + ข้างคอ
             new Seed(702.6, 177.7, SKIN),        // หู + ข้างคอ
             new Seed(702.6, 200.0, SKIN),        // หู + ข้างคอ
