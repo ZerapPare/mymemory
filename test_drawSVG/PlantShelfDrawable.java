@@ -1,10 +1,10 @@
-import java.awt.Color;
-
 /**
  * ชั้นวางต้นไม้ 3 กระถาง พอร์ตมาจาก Scene.drawPlantShelf / drawPottedPlant
  *
  * ย่อขนาดด้วยการคูณตัวเลขเอง ไม่มี transform ของ Java2D ให้ใช้แล้ว
  * พิกัดเป็นพิกเซลจอตรงๆ ไม่ขยายตามหน้าต่าง เหมือน WallClockDrawable
+ *
+ * สีมาจาก ArtConfig ที่เดียว
  */
 public class PlantShelfDrawable implements Drawable {
 
@@ -30,8 +30,8 @@ public class PlantShelfDrawable implements Drawable {
         int boardH = sc(BOARD_H);
         int left = centreX - boardW / 2;
 
-        int wood = Raster.argb(Art.S1_WOOD);
-        int woodD = Raster.argb(Art.S1_WOOD_D);
+        int wood = Raster.argb(ArtConfig.WOOD);
+        int woodD = Raster.argb(ArtConfig.WOOD_DARK);
         double edge = Math.max(1, 2 * scale);
 
         double[] board = Gfx.rect(left, shelfY, boardW, boardH);
@@ -53,7 +53,8 @@ public class PlantShelfDrawable implements Drawable {
         int lip = sc(22);   // ความสูงของปากกระถางเหนือฐาน
         int rim = sc(5);    // ครึ่งความสูงของวงรีปากกระถาง
 
-        int woodD = Raster.argb(Art.S1_WOOD_D);
+        int woodD = Raster.argb(ArtConfig.WOOD_DARK);
+        int leafDark = Raster.argb(ArtConfig.LEAF_DARK);
         double leafEdge = Math.max(1, 2.2 * scale);
 
         // ใบไม้ก่อน กระถางจะได้ทับโคนก้าน - ใบละสอง Bézier กำลังสองต่อกันเป็นรูปปิด
@@ -71,10 +72,9 @@ public class PlantShelfDrawable implements Drawable {
             System.arraycopy(a, 0, leaf, 0, a.length);
             System.arraycopy(b, 2, leaf, a.length, b.length - 2);
 
-            int fill = Raster.argb(i == 0 ? Art.S1_LEAF
-                    : Art.lerp(Art.S1_LEAF, Art.S1_LEAF_D, 0.45));
+            int fill = Raster.argb(i == 0 ? ArtConfig.LEAF : ArtConfig.LEAF_SIDE);
             Gfx.scanlineFill(r, leaf, null, fill);
-            Gfx.polyline(r, leaf, true, leafEdge, Raster.argb(Art.S1_LEAF_D));
+            Gfx.polyline(r, leaf, true, leafEdge, leafDark);
         }
 
         double[] pot = {
@@ -83,12 +83,11 @@ public class PlantShelfDrawable implements Drawable {
                 cx + rx * 0.72, baseY,
                 cx - rx * 0.72, baseY,
         };
-        Gfx.scanlineFill(r, pot, null, Raster.argb(Art.S1_WOOD));
+        Gfx.scanlineFill(r, pot, null, Raster.argb(ArtConfig.WOOD));
         Gfx.polyline(r, pot, true, Math.max(1, 2 * scale), woodD);
 
         // ปากกระถางเป็นวงรี วาดด้วย midpoint ellipse
-        Gfx.fillEllipse(r, cx, baseY - lip, rx, rim,
-                Raster.argb(Art.lerp(Art.S1_WOOD, Color.WHITE, 0.3)));
+        Gfx.fillEllipse(r, cx, baseY - lip, rx, rim, Raster.argb(ArtConfig.POT_RIM));
         Gfx.polyline(r, Gfx.ellipsePoints(cx, baseY - lip, rx, rim), true, 1, woodD);
     }
 

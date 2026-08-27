@@ -1,9 +1,8 @@
-import java.awt.Color;
-
 /**
  * ของบนโต๊ะ - ลำแสงแดดเฉียง กับแก้วกาแฟที่มีควันลอย
  *
  * ลำแสงกับควันใช้สีโปร่ง ซึ่ง Raster.plot() ผสม alpha ให้เอง
+ * สีมาจาก ArtConfig ที่เดียว
  */
 public class DeskDecorDrawable implements Drawable {
 
@@ -27,7 +26,7 @@ public class DeskDecorDrawable implements Drawable {
                 winX - (w * 0.2), h,                // พาดเฉียงลงมาพื้น/โต๊ะซ้าย
                 winX - (w * 0.4), h * 0.65,         // ปลายแสงด้านซ้าย
         };
-        Gfx.scanlineFill(r, beam, null, (25 << 24) | 0xFFFFC8);
+        Gfx.scanlineFill(r, beam, null, Raster.argb(ArtConfig.SUNBEAM));
     }
 
     private void drawCoffeeCup(Raster r, int w, int h, double time) {
@@ -38,12 +37,12 @@ public class DeskDecorDrawable implements Drawable {
 
         // เงาใต้แก้ว
         Gfx.fillEllipse(r, cupX - 5 + (cupW + 10) / 2, cupY + cupH - 5 + 7,
-                (cupW + 10) / 2, 7, 0x40000000);
+                (cupW + 10) / 2, 7, Raster.argb(ArtConfig.CUP_SHADOW));
 
         double[] cup = Gfx.roundRect(cupX, cupY, cupW, cupH, 10, 10);
-        Gfx.scanlineFill(r, cup, null, Raster.argb(new Color(0xF0F0F0)));
+        Gfx.scanlineFill(r, cup, null, Raster.argb(ArtConfig.CUP));
 
-        int rim = Raster.argb(new Color(0x332B25));
+        int rim = Raster.argb(ArtConfig.PROP_INK);
         Gfx.polyline(r, cup, true, 2, rim);
 
         // หูจับแก้ว - ส่วนโค้งครึ่งวงทางขวา ตรงกับ drawArc(-90, 180) เดิม
@@ -51,7 +50,7 @@ public class DeskDecorDrawable implements Drawable {
                 false, 2, rim);
 
         // ควันกาแฟ - Bézier กำลังสามที่ส่ายตามเวลา
-        int steamColor = (120 << 24) | 0xC8C8C8;
+        int steamColor = Raster.argb(ArtConfig.STEAM);
         for (int i = 0; i < 2; i++) {
             double offsetX = (i == 0) ? 12 : 26;
             double wave = Math.sin(time * 2.5 + i * 1.5) * 6;

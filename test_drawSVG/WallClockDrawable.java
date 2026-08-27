@@ -1,7 +1,7 @@
-import java.awt.Color;
-
 /**
  * นาฬิกาแขวน - วงกลมจาก midpoint ellipse เข็มกับขีดจาก Bresenham
+ *
+ * สีมาจาก ArtConfig ที่เดียว
  */
 public class WallClockDrawable implements Drawable {
     private final int cx, cy;
@@ -19,8 +19,8 @@ public class WallClockDrawable implements Drawable {
     }
 
     private void drawWallClock(Raster r, int cx, int cy, double t) {
-        int face = Raster.argb(Art.lerp(Art.S1_WALL, Color.WHITE, 0.7));
-        int ink = Raster.argb(Art.S1_INK);
+        int face = Raster.argb(ArtConfig.CLOCK_FACE);
+        int ink = Raster.argb(ArtConfig.INK);
 
         Gfx.fillEllipse(r, cx, cy, 34, 34, face);
         Gfx.polyline(r, Gfx.ellipsePoints(cx, cy, 36, 36), true, 1, ink);
@@ -40,7 +40,7 @@ public class WallClockDrawable implements Drawable {
 
         double revs = t / 2.5 * 3.0;
         double stepped = Math.floor(revs * 20.0) / 20.0;
-        hand(r, cx, cy, stepped * 2 * Math.PI, 26, 1.8, Raster.argb(Art.rgb("#E24B4B")));
+        hand(r, cx, cy, stepped * 2 * Math.PI, 26, 1.8, Raster.argb(ArtConfig.CLOCK_SECOND));
 
         Gfx.fillEllipse(r, cx, cy, 2, 2, ink);
     }

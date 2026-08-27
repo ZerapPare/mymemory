@@ -235,8 +235,9 @@ public class MultiSvgAnimationApp extends JPanel {
                 + (currentIndex < names.size() ? names.get(currentIndex) : "?")
                 + (paused ? "  [stop]" : "")
                 + "  |  " + (colorOn ? "color" : "line")
-                + "  |  SPACE=stop  LEFT/RIGHT=frame  N=scene  C=color", 0x66000000);
-        Gfx.text(r, 10, 22, pickText, 0xCC0033AA);
+                + "  |  SPACE=stop  LEFT/RIGHT=frame  N=scene  C=color",
+                Raster.argb(ArtConfig.HUD_MAIN));
+        Gfx.text(r, 10, 22, pickText, Raster.argb(ArtConfig.HUD_PICK));
     }
 
     // =================== สร้างพื้นหลัง (Cache) ===================

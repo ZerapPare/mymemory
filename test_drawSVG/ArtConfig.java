@@ -18,7 +18,22 @@ public final class ArtConfig {
     public static final int FRAME_INTERVAL = 360; // ms ต่อเฟรม
     public static final int TICK_INTERVAL = 30; // ms ต่อการวาด
 
-    // ------ สีที่ใช้ใน SVG ------
+    /**
+     * โฟลเดอร์ที่เก็บไฟล์ SVG - นับจาก repo root จึงต้องรันจากที่นั่นเท่านั้น
+     *
+     * ย้ายโฟลเดอร์ทีหลังก็แก้บรรทัดนี้บรรทัดเดียว ไม่ต้องไล่แก้ทุกที่ที่อ้างชื่อไฟล์
+     */
+    public static final String SVG_DIR = "test_drawSVG/svg/";
+
+    // =================================================================
+    // สีทั้งหมดของโปรเจกต์อยู่ตรงนี้ที่เดียว
+    //
+    // ทุกตัวเป็น Color เหมือนกันหมด - ฝั่ง Seed ใช้ตรงๆ ส่วน Drawable แปลงเป็น
+    // ARGB ด้วย Raster.argb() ก่อนส่งเข้า Gfx
+    // =================================================================
+
+    // ------ สีในภาพ SVG (ตัวละครกับฉาก) ------
+    public static final Color INK = Color.BLACK;   // ลายเส้น potrace
     public static final Color BACKDROP = new Color(0xDCEBFF);
     public static final Color TABLE = new Color(0xF2E4CB);
     public static final Color HAIR = new Color(0x6B4A2E);
@@ -35,6 +50,46 @@ public final class ArtConfig {
     public static final Color PANTS = new Color(0x4A5568);
     public static final Color CHAIR = new Color(0x4A4A4A);
     public static final Color DARKCIRCLE = new Color(0x2C2C2C);
+
+    // ------ ชั้นวางต้นไม้ ------
+    public static final Color WOOD = new Color(0xC89A63);
+    public static final Color WOOD_DARK = new Color(0xA87B46);
+    public static final Color LEAF = new Color(0x84A96A);
+    public static final Color LEAF_DARK = new Color(0x5F8250);
+    /** ใบข้างที่เข้มกว่าใบกลาง = LEAF ผสม LEAF_DARK 45% */
+    public static final Color LEAF_SIDE = new Color(0x73975E);
+    /** ปากกระถาง = WOOD ผสมขาว 30% */
+    public static final Color POT_RIM = new Color(0xD8B891);
+
+    // ------ นาฬิกาแขวน ------
+    /** หน้าปัด = สีผนังเดิม #8B7355 ผสมขาว 70% */
+    public static final Color CLOCK_FACE = new Color(0xDCD5CC);
+    public static final Color CLOCK_SECOND = new Color(0xE24B4B);
+
+    // ------ หน้าต่าง ------
+    public static final Color SKY = new Color(0xD8E8E2);
+    public static final Color CLOUD = new Color(0xF2FAF6);
+    public static final Color SUN = new Color(0xF4A229);
+    public static final Color WINDOW_FRAME = new Color(0xDDAA66);
+    /** เส้นขอบของ props - ใช้ทั้งรัศมีดวงอาทิตย์และขอบแก้วกาแฟ */
+    public static final Color PROP_INK = new Color(0x332B25);
+
+    // ------ ของบนโต๊ะ ------
+    public static final Color CUP = new Color(0xF0F0F0);
+    public static final Color CUP_SHADOW = new Color(0x40000000, true);
+    public static final Color STEAM = new Color(200, 200, 200, 120);
+    public static final Color SUNBEAM = new Color(255, 255, 200, 25);
+
+    // ------ ป้าย KMITL ------
+    public static final Color BOARD_FACE = Color.WHITE;   // ความโปร่งคิดตอนรันไทม์
+    public static final Color BOARD_BORDER = new Color(0xFF6600);
+    public static final Color SEAL = new Color(0xFF6600);
+    public static final Color SEAL_EDGE = Color.ORANGE;
+    public static final Color BOARD_TEXT = Color.BLACK;
+
+    // ------ HUD ------
+    public static final Color HUD_MAIN = new Color(0x66000000, true);
+    public static final Color HUD_PICK = new Color(0xCC0033AA, true);
 
 
     /** จุดเริ่มเทสีหนึ่งจุด พิกัดเป็นหน่วย viewBox ไม่ใช่พิกเซลจอ */
@@ -138,12 +193,12 @@ public final class ArtConfig {
 
     public static final Scene SCENE_1 = new Scene("sitting",
             new String[] {
-                    "test_drawSVG/a1.svg",
-                    "test_drawSVG/a2.svg",
-                    "test_drawSVG/a3.svg",
-                    "test_drawSVG/a4.svg",
-                    "test_drawSVG/a5.svg",
-                    "test_drawSVG/a6.svg",
+                    SVG_DIR + "a1.svg",
+                    SVG_DIR + "a2.svg",
+                    SVG_DIR + "a3.svg",
+                    SVG_DIR + "a4.svg",
+                    SVG_DIR + "a5.svg",
+                    SVG_DIR + "a6.svg",
             },
             SITTING, SITTING_SCREENS, ROOM_DAMS);
 
@@ -196,7 +251,7 @@ public final class ArtConfig {
 
     public static final Scene SCENE_2 = new Scene("shock",
             new String[] {
-                    "test_drawSVG/b1.svg",
+                    SVG_DIR + "b1.svg",
             }, SHOCKED, SHOCKED_FISTS, ROOM_DAMS);
 
     // ==================== ซีน 3 : ดีใจ ====================
@@ -241,8 +296,8 @@ public final class ArtConfig {
 
     public static final Scene SCENE_3 = new Scene("happy",
             new String[] {
-                    "test_drawSVG/c1.svg",
-                    "test_drawSVG/c2.svg",
+                    SVG_DIR + "c1.svg",
+                    SVG_DIR + "c2.svg",
             },
             CELEBRATING, CELEBRATING_FISTS, ROOM_DAMS);
 	
@@ -332,7 +387,7 @@ public final class ArtConfig {
     private static final Seed[] SAD_PERFRAME = {};
 
     public static final Scene SCENE_4 = new Scene("sad",
-            new String[] { "test_drawSVG/d.svg" },
+            new String[] { SVG_DIR + "d.svg" },
             SAD, SAD_PERFRAME, SAD_DAMS);
 
     /** ลำดับการเล่น - จบซีนหนึ่งแล้วไปซีนถัดไป วนกลับมาซีนแรก */

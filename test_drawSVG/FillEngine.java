@@ -31,7 +31,7 @@ public final class FillEngine {
         Raster r = new Raster(w, h);
         r.clear(0xFF000000 | ArtConfig.BLANK);
 
-        int ink = 0xFF000000;
+        int ink = Raster.argb(ArtConfig.INK);
 
         // ---- ลายเส้นตัวละคร ----
         // ต้องทั้งถมและลากขอบ - เส้น potrace เป็นสลิ่วบางที่แค่แตะกัน ถมอย่างเดียว

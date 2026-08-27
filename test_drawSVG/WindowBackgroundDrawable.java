@@ -1,9 +1,8 @@
-import java.awt.Color;
-
 /**
  * หน้าต่างพร้อมท้องฟ้า เมฆ ดวงอาทิตย์ และกรอบไม้
  *
  * ท้องฟ้าข้างในถูกตัดด้วย clip ของ Raster แทน g.setClip() เดิม
+ * สีมาจาก ArtConfig ที่เดียว
  */
 public class WindowBackgroundDrawable implements Drawable {
 
@@ -20,11 +19,11 @@ public class WindowBackgroundDrawable implements Drawable {
         int winX = canvasW - winW - 15;
         int winY = 15;
 
-        int sky      = Raster.argb(new Color(0xD8E8E2));
-        int frame    = Raster.argb(new Color(0xDDAA66));
-        int sun      = Raster.argb(new Color(0xF4A229));
-        int sunRay   = Raster.argb(new Color(0x332B25));
-        int cloud    = Raster.argb(new Color(0xF2FAF6));
+        int sky      = Raster.argb(ArtConfig.SKY);
+        int frame    = Raster.argb(ArtConfig.WINDOW_FRAME);
+        int sun      = Raster.argb(ArtConfig.SUN);
+        int sunRay   = Raster.argb(ArtConfig.PROP_INK);
+        int cloud    = Raster.argb(ArtConfig.CLOUD);
 
         // 2. ฉากหลังในหน้าต่าง - จำกัดพื้นที่เขียนด้วย clip ของ Raster
         int[] saved = r.saveClip();

@@ -80,32 +80,32 @@ public class KmitlBoardDrawable implements Drawable {
 
         // 1. ตราสัญลักษณ์ KMITL
         elements.add(new Element(
-                "test_drawSVG/kmitl.svg",
+                ArtConfig.SVG_DIR + "kmitl.svg",
                 100, 30,
                 0.40,
                 0,
-                new Color(0xFF6600),
-                Color.ORANGE
+                ArtConfig.SEAL,
+                ArtConfig.SEAL_EDGE
         ));
 
         // 2. ข้อความ 1
         elements.add(new Element(
-                "test_drawSVG/text1.svg",
+                ArtConfig.SVG_DIR + "text1.svg",
                 0, -125,
                 0.2,
                 0,
-                Color.BLACK,
-                Color.BLACK
+                ArtConfig.BOARD_TEXT,
+                ArtConfig.BOARD_TEXT
         ));
 
         // 3. ข้อความ 2
         elements.add(new Element(
-                "test_drawSVG/text2.svg",
+                ArtConfig.SVG_DIR + "text2.svg",
                 -110, 20,
                 0.45,
                 0,
-                Color.BLACK,
-                Color.BLACK
+                ArtConfig.BOARD_TEXT,
+                ArtConfig.BOARD_TEXT
         ));
     }
 
@@ -166,8 +166,10 @@ public class KmitlBoardDrawable implements Drawable {
                 BOARD_W, BOARD_H, BOARD_ARC, BOARD_ARC);
         double[] screenFrame = apply(board, frame);
 
-        Gfx.scanlineFill(r, screenFrame, null, (boardAlpha << 24) | 0xFFFFFF);
-        Gfx.polyline(r, screenFrame, true, 5.0 * boardScale, 0xFFFF6600);
+        Gfx.scanlineFill(r, screenFrame, null,
+                (boardAlpha << 24) | (ArtConfig.BOARD_FACE.getRGB() & 0xFFFFFF));
+        Gfx.polyline(r, screenFrame, true, 5.0 * boardScale,
+                Raster.argb(ArtConfig.BOARD_BORDER));
 
         // ตอนพุ่ง ตรากับข้อความขยายตามป้ายไปด้วย ถ้าไม่จางหายมันจะบังจนเต็มจอ
         // แทนที่จะเหลือสีขาว - จางหมดตอนพุ่งไปได้ราวสองในสามของเฟส
