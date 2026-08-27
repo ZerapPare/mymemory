@@ -157,11 +157,13 @@ public final class ArtConfig {
             new Seed(317.8, 257.2, BACKDROP),
             new Seed(342.4, 133.4, BACKDROP),
             new Seed(218.6, 413.4, TABLE),
+            new Seed(319.0, 230.5, SHIRT),
             new Seed(229.8, 207.6, SHIRT),
             new Seed(301.0, 75.5, HAIR),
             new Seed(325.2, 111.1, SKIN),
             new Seed(294.4, 142.0, SKIN),
             new Seed(350.3, 243.5, SHIRT),
+            new Seed(310.0, 222.7, SHIRT),
             new Seed(306.4, 200.0, SKIN),
             new Seed(333.5, 210.4, SKIN),
             new Seed(327.9, 175.8, SKIN),
@@ -169,6 +171,7 @@ public final class ArtConfig {
             new Seed(315.6, 168.0, SKIN),
             new Seed(324.5, 155.8, SKIN),
             new Seed(326.8, 178.1, SKIN),
+            new Seed(330.1, 169.1, SKIN),        // นิ้ว
             new Seed(355.8, 208.2, SHIRT),
             new Seed(298.9, 272.9, SHIRT),
             new Seed(333.5, 152.4, SHIRT),
@@ -179,6 +182,8 @@ public final class ArtConfig {
             new Seed(281.0, 100.0, SKIN),
             new Seed(330.1, 136.8, SKIN),
             new Seed(227.5, 166.9, INSIDESHIRT),
+            new Seed(305.6, 161.3, SKIN),
+            new Seed(305.6, 161.3, SKIN)
     };
 
     /** จอแท็บเล็ตขยับตามเฟรม จึงต้องมี seed ต่อเฟรม */
@@ -213,6 +218,8 @@ public final class ArtConfig {
             new Seed(190.2, 192.0, SHIRT),       // ลำตัว
             // ดีเทลเสื้อ
             new Seed(150.6, 136.8, SHIRT),
+            new Seed(216.4, 124.5, SHIRT),
+            new Seed(190.7, 132.3, SHIRT),
             new Seed(185.1, 136.8, SHIRT),
             new Seed(165.1, 142.4, SHIRT),
             new Seed(371.7, 145.3, SHIRT),       // แขนขวาที่ยกขึ้น
@@ -239,6 +246,7 @@ public final class ArtConfig {
             new Seed(293.3, 158.0, MOUTH),        // ปาก
             new Seed(290.0, 131.2, TEAR),
             new Seed(335.7, 135.7, TEAR),
+            new Seed(291.1, 176.9, INSIDESHIRT), // ข้างในเสื้อ
             new Seed(229.7, 163.6, INSIDESHIRT), // ข้างในเสื้อ
             new Seed(401.1, 293.1, SCREEN),      // จอแท็บเล็ต
             new Seed(400.0, 312.7, SCREEN),      // ไอคอนบนจอ
@@ -276,6 +284,8 @@ public final class ArtConfig {
             new Seed(279.3, 176.8, SKIN), // มือที่คาง
             //บริเวณแขน
             new Seed(392.6, 174.7, SKIN),
+            new Seed(378.1, 137.9, SKIN),
+            new Seed(368.0, 136.8, SKIN),
             new Seed(371.4, 122.3, SKIN),
             new Seed(330.1, 136.8, SKIN),
             new Seed(389.2, 127.9, SKIN),
