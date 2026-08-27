@@ -3,33 +3,24 @@ import java.util.Arrays;
 /**
  * รูปทรงทั้งหมด สร้างจาก Raster.plot() อย่างเดียว ไม่มีคำสั่งวาดของ Java2D
  *
- * แบ่งเป็นสามพวก
- *   1. ตัวสร้างรูปทรง - คายลิสต์จุด {x0,y0,x1,y1,...} ออกมา ไม่พล็อตเอง
+ * แบ่งเป็น 3 ส่วน
+ *   1. ตัวสร้างรูปทรง - บอกลิสต์จุด {x0,y0,x1,y1,...} ออกมา
  *      เอาไป polyline() = วาดขอบ  เอาไป scanlineFill() = ถมไส้  ใช้จุดชุดเดียวกัน
  *   2. ตัววาดเส้น - Bresenham
- *   3. ตัวถม - scanline (nonzero winding) กับ flood fill 4 ทิศ
- *
- * ที่ต้องคายจุดแทนที่จะพล็อตเลย เพราะเกือบทุกรูปทรงในโปรเจกต์ต้องทั้งถมไส้และ
- * วาดขอบทับ ถ้าพล็อตเองต้องเขียนอัลกอริทึมซ้ำสองรอบ
+ *   3. ตัวถม - scanline กับ flood fill 
  */
 public final class Gfx {
 
     private Gfx() {
     }
 
-    // =================================================================
-    // 1. ตัวสร้างรูปทรง - คายจุด
-    // =================================================================
-
+    // 1. ตัวสร้างรูปทรง
     public static double[] rect(double x, double y, double w, double h) {
         return new double[] { x, y, x + w, y, x + w, y + h, x, y + h };
     }
 
     /**
-     * midpoint ellipse - คืน "x ที่กว้างที่สุด" ของแต่ละแถว ดัชนีคือระยะจากกึ่งกลาง
-     *
-     * ยกอัลกอริทึมมาจาก Midpoint.fillEllipse เดิม แยก region 1 / region 2
-     * ตามจุดที่ความชันเปลี่ยน คืนเป็นตารางเพื่อใช้ได้ทั้งถมและสร้างจุดขอบ
+     * midpoint ellipse 
      */
     public static int[] ellipseSpans(int rx, int ry) {
         if (rx < 0 || ry < 0) return new int[] { 0 };
@@ -70,7 +61,6 @@ public final class Gfx {
             }
         }
 
-        // แถวที่อัลกอริทึมข้ามไป (ตอนไล่เร็วในแนวตั้ง) ยืมค่าจากแถวที่แคบกว่าถัดไป
         int carry = 0;
         for (int i = ry; i >= 0; i--) {
             if (maxX[i] < 0) maxX[i] = carry;
@@ -83,7 +73,6 @@ public final class Gfx {
         if (row >= 0 && row < maxX.length && x > maxX[row]) maxX[row] = x;
     }
 
-    /** จุดรอบวงรี เรียงตามเส้นรอบวง - ขึ้นข้างขวาแล้ววนลงข้างซ้าย */
     public static double[] ellipsePoints(double cx, double cy, int rx, int ry) {
         int[] maxX = ellipseSpans(rx, ry);
         double[] pts = new double[(ry * 2 + 1) * 4];
@@ -100,10 +89,7 @@ public final class Gfx {
     }
 
     /**
-     * ส่วนโค้ง - คัดจุดจากวงรีเต็มวงเฉพาะช่วงมุมที่ต้องการ
-     *
-     * มุมนับแบบเดียวกับ Graphics.drawArc คือ 0 องศาอยู่ทางขวา ทวนเข็มเป็นบวก
-     * ซึ่งในพิกัดจอที่แกน y ชี้ลง แปลว่าต้องกลับเครื่องหมาย y
+     * ส่วนโค้ง
      */
     public static double[] arcPoints(double cx, double cy, int rx, int ry,
                                      double startDeg, double extentDeg) {
@@ -125,7 +111,6 @@ public final class Gfx {
     private static int keep(double[] pts, int n, double x, double y,
                             double cx, double cy, double lo, double hi) {
         double a = Math.toDegrees(Math.atan2(cy - y, x - cx));
-        // เลื่อนให้ตกในช่วง [lo, lo+360) ก่อนเทียบ
         while (a < lo) a += 360;
         while (a >= lo + 360) a -= 360;
         if (a <= hi) {
@@ -173,7 +158,7 @@ public final class Gfx {
         return n + src.length;
     }
 
-    /** Bézier กำลังสอง - คายจุดตามสูตรพารามิเตอร์ ไม่ได้ใช้ quadTo ของ Java2D */
+    /** Bezier2 */
     public static double[] bezier2(double x0, double y0, double x1, double y1,
                                    double x2, double y2, int steps) {
         double[] pts = new double[(steps + 1) * 2];
@@ -186,7 +171,7 @@ public final class Gfx {
         return pts;
     }
 
-    /** Bézier กำลังสาม - สูตรเดียวกับ SvgLoader.customCurveTo */
+    /** Bezier3*/
     public static double[] bezier3(double x0, double y0, double x1, double y1,
                                    double x2, double y2, double x3, double y3, int steps) {
         double[] pts = new double[(steps + 1) * 2];
@@ -201,9 +186,7 @@ public final class Gfx {
         return pts;
     }
 
-    // =================================================================
     // 2. ตัววาดเส้น
-    // =================================================================
 
     /** Bresenham เต็มทั้ง 8 octant หนา 1 พิกเซล */
     public static void line(Raster r, int x0, int y0, int x1, int y1, int argb) {
@@ -229,15 +212,11 @@ public final class Gfx {
     }
 
     /**
-     * เส้นหนา - เดิน Bresenham แล้ววางวงกลมทึบทุกก้าว
-     *
-     * ได้ปลายมนกับข้อต่อมนมาเอง ตรงกับ BasicStroke(CAP_ROUND, JOIN_ROUND)
-     * ที่โค้ดเดิมใช้แทบทุกที่
+     * เส้นหนา - เดิน Bresenham แล้ววางวงกลมทึบ
      */
     public static void thickLine(Raster r, double x0, double y0, double x1, double y1,
                                  double width, int argb) {
-        // วงกลมรัศมี radius กว้าง 2*radius+1 พิกเซล จึงต้องใช้ floor ไม่ใช่ round
-        // ไม่งั้นเส้นหนา 3 จะกลายเป็น 5 แล้วไปปิดช่องที่ควรเปิดไว้ให้ flood fill
+
         int radius = (int) Math.floor(width / 2.0);
         if (radius < 1) {
             line(r, (int) Math.round(x0), (int) Math.round(y0),
@@ -277,7 +256,7 @@ public final class Gfx {
         }
     }
 
-    /** ลากเส้นต่อกันตามลิสต์จุด - close = ลากปิดกลับจุดแรก */
+    /** ลากเส้นต่อกันตามลิสต์จุด - close */
     public static void polyline(Raster r, double[] pts, boolean close, double width, int argb) {
         int n = pts.length / 2;
         if (n < 2) return;
@@ -299,32 +278,9 @@ public final class Gfx {
         }
     }
 
-    /**
-     * เขียนข้อความด้วยฟอนต์บิตแมป - มาแทน g.drawString()
-     *
-     * x, y คือมุมซ้ายบนของตัวอักษรตัวแรก ไม่ใช่เส้นฐานแบบ drawString
-     */
-    public static void text(Raster r, int x, int y, String s, int argb) {
-        for (int i = 0; i < s.length(); i++) {
-            int[] cols = Font5x7.glyph(s.charAt(i));
-            int gx = x + i * Font5x7.ADVANCE;
-            for (int col = 0; col < Font5x7.W; col++) {
-                int bits = cols[col];
-                for (int row = 0; row < Font5x7.H; row++) {
-                    if ((bits & (1 << row)) != 0) r.plot(gx + col, y + row, argb);
-                }
-            }
-        }
-    }
 
-    // =================================================================
     // 2.5 คอนทัวร์จาก Path2D
-    // =================================================================
 
-    /**
-     * ลิสต์จุดของรูปปิดหลายวง - pts เป็น {x,y} เรียงติดกัน
-     * ends[i] บอกว่าคอนทัวร์ที่ i จบที่จุดลำดับไหน (หน่วยเป็นจำนวนจุด)
-     */
     public static final class Contours {
         public final double[] pts;
         public final int[] ends;
@@ -337,10 +293,6 @@ public final class Gfx {
 
     /**
      * อ่านจุดออกจาก Path2D ที่ SvgLoader แตกไว้แล้ว
-     *
-     * PathIterator เป็นแค่ตัวอ่านข้อมูล ไม่ได้วาดอะไร และ path ที่ SvgLoader คืนมา
-     * มีแต่ MOVETO/LINETO/CLOSE ล้วน เพราะ customLineTo/customCurveTo คำนวณจุด
-     * เองหมดแล้ว ไม่มีเส้นโค้งจริงเหลือให้ต้อง flatten ซ้ำ
      */
     public static Contours contours(java.awt.Shape sh) {
         double[] buf = new double[6];
@@ -376,7 +328,7 @@ public final class Gfx {
         return new Contours(pts, Arrays.copyOf(endBuf, e));
     }
 
-    /** ลากขอบของทุกคอนทัวร์ - ใช้คู่กับ scanlineFill เพื่อปิดรูจิ๋วระหว่างสลิ่ว */
+    /** ลากขอบของทุกคอนทัวร์ - ใช้คู่กับ scanlineFill เพื่อปิดรู*/
     public static void strokeContours(Raster r, Contours c, double width, int argb) {
         int start = 0;
         for (int end : c.ends) {
@@ -390,11 +342,9 @@ public final class Gfx {
         }
     }
 
-    // =================================================================
     // 3. ตัวถม
-    // =================================================================
 
-    /** ถมวงรีด้วย scanline โดยตรง - ไม่ต้องผ่าน scanlineFill เพราะรู้ span อยู่แล้ว */
+    /** ถมวงรีด้วย scanline */
     public static void fillEllipse(Raster r, int cx, int cy, int rx, int ry, int argb) {
         if (rx < 0 || ry < 0) return;
         int[] maxX = ellipseSpans(rx, ry);
@@ -405,21 +355,15 @@ public final class Gfx {
     }
 
     /**
-     * ถมรูปหลายเหลี่ยมด้วย scanline + กฎ nonzero winding
-     *
-     * ต้องเป็น nonzero ไม่ใช่ even-odd เพราะ potrace วาดคอนทัวร์ของ "รู" กลับทิศ
-     * กับขอบนอก ถ้าใช้ even-odd รูในลายเส้นจะถูกถมทึบหมด
-     *
-     * pts เป็น {x,y} เรียงติดกัน · ends บอกว่าแต่ละคอนทัวร์จบที่จุดที่เท่าไร
-     * (หน่วยเป็นจำนวนจุด ไม่ใช่จำนวน double) ทุกคอนทัวร์ถือว่าปิดเอง
+     * ถมรูปหลายเหลี่ยมด้วย scanline 
      */
     public static void scanlineFill(Raster r, double[] pts, int[] ends, int argb) {
         int nPts = pts.length / 2;
         if (nPts < 3) return;
         if (ends == null || ends.length == 0) ends = new int[] { nPts };
 
-        // ---- สร้างตารางขอบ ----
-        // เก็บเฉพาะขอบที่ข้ามแถว ขอบแนวนอนไม่มีผลกับการนับ winding
+        // สร้างตารางขอบ 
+        // เก็บเฉพาะขอบที่ข้ามแถว 
         int maxEdges = nPts;
         double[] eYTop = new double[maxEdges];
         double[] eYBot = new double[maxEdges];
@@ -468,9 +412,7 @@ public final class Gfx {
         int y1 = Math.min(r.h - 1, (int) Math.ceil(maxY - 0.5) - 1);
         if (y0 > y1) return;
 
-        // ---- ตารางขอบ: จัดขอบเข้าถังตามแถวที่เริ่มมีผล ----
-        // ใช้ลิสต์โยงด้วย int array แทนการเรียงทั้งชุด จะได้ไม่ต้อง sort O(n log n)
-        // และไม่ต้องบ็อกซ์ Integer ซึ่งเป็นตัวกินเวลาหลักตอนรูปมีจุดเป็นแสน
+        // ตารางขอบ จัดขอบเข้าถังตามแถวที่มีผล 
         int rows = y1 - y0 + 1;
         int[] bucket = new int[rows];
         Arrays.fill(bucket, -1);
@@ -495,7 +437,7 @@ public final class Gfx {
             for (int e = bucket[y - y0]; e != -1; e = nextEdge[e]) {
                 active[nActive++] = e;
             }
-            // ตัดขอบที่พ้นแถวนี้ไปแล้วออก
+            // ตัดขอบที่พ้นไปแล้วออก
             int keep = 0;
             for (int i = 0; i < nActive; i++) {
                 if (eYBot[active[i]] > yc) active[keep++] = active[i];
@@ -503,8 +445,7 @@ public final class Gfx {
             nActive = keep;
             if (nActive == 0) continue;
 
-            // อัดพิกัด x กับทิศทางลงคีย์เดียวกัน จะได้เรียงด้วย Arrays.sort ของ
-            // ชนิดพื้นฐาน (dual-pivot quicksort) ไม่ต้องเรียงสองอาเรย์คู่กันเอง
+            // เก็บพิกัด x กับทิศทางลงคีย์เดียวกัน 
             for (int i = 0; i < nActive; i++) {
                 int e = active[i];
                 double x = eX[e] + (yc - eYTop[e]) * eSlope[e];
@@ -525,10 +466,7 @@ public final class Gfx {
     }
 
     /**
-     * แปลงพิกัด x เป็นจำนวนเต็มที่เรียงลำดับตรงกับค่าเดิม เพื่ออัดรวมกับทิศทางขอบ
-     *
-     * ปัดเป็นหน่วย 1/256 พิกเซล ละเอียดเกินพอสำหรับหาจุดตัดของ scanline
-     * และบวก BIAS ให้เป็นบวกเสมอ คีย์ที่ได้จึงเรียงด้วย Arrays.sort ของ long ตรงๆ
+     * แปลงพิกัด x เป็นจำนวนเต็มที่เรียงลำดับตรงกับค่าเดิม เพื่อรวมกับทิศทางขอบ
      */
     private static final int SUB = 256;
     private static final long BIAS = 1L << 40;

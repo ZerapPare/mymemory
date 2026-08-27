@@ -1,19 +1,15 @@
 /**
- * หน้าต่างพร้อมท้องฟ้า เมฆ ดวงอาทิตย์ และกรอบไม้
- *
- * ท้องฟ้าข้างในถูกตัดด้วย clip ของ Raster แทน g.setClip() เดิม
- * สีมาจาก ArtConfig ที่เดียว
+ * หน้าต่าง
  */
 public class WindowBackgroundDrawable implements Drawable {
 
     @Override
     public void draw(Raster r, double time) {
-        // time ไม่ใช้ - หน้าต่างไม่ขยับ แต่ต้องรับตาม interface
         drawWindowBackground(r, r.w, r.h);
     }
 
     private void drawWindowBackground(Raster r, int canvasW, int canvasH) {
-        // 1. กำหนดขนาดและตำแหน่งของหน้าต่าง (มุมขวาบน)
+        // 1. กำหนดขนาดและตำแหน่งของหน้าต่าง 
         int winW = (int) (canvasW * 0.28);
         int winH = (int) (canvasH * 0.32);
         int winX = canvasW - winW - 15;
@@ -25,14 +21,14 @@ public class WindowBackgroundDrawable implements Drawable {
         int sunRay   = Raster.argb(ArtConfig.PROP_INK);
         int cloud    = Raster.argb(ArtConfig.CLOUD);
 
-        // 2. ฉากหลังในหน้าต่าง - จำกัดพื้นที่เขียนด้วย clip ของ Raster
+        // 2. ฉากหลังในหน้าต่าง 
         int[] saved = r.saveClip();
         r.clip(winX, winY, winW, winH);
 
         // A. ท้องฟ้า
         Gfx.scanlineFill(r, Gfx.rect(winX, winY, winW, winH), null, sky);
 
-        // B. เมฆ - วงรีสองก้อน (พิกัดเดิมเป็นมุมซ้ายบน ต้องแปลงเป็นจุดศูนย์กลาง)
+        // B. เมฆ 
         oval(r, winX - (int) (winW * 0.1), winY + (int) (winH * 0.2),
                 (int) (winW * 0.6), (int) (winH * 0.3), cloud);
         oval(r, winX + (int) (winW * 0.5), winY + (int) (winH * 0.6),
@@ -58,7 +54,7 @@ public class WindowBackgroundDrawable implements Drawable {
 
         r.restoreClip(saved);
 
-        // 3. กรอบไม้หน้าต่าง (ขอบนอก + คานกากบาทกลาง)
+        // 3. กรอบไม้หน้าต่าง
         int borderThickness = 8;
         int barThickness = 5;
 
@@ -72,11 +68,9 @@ public class WindowBackgroundDrawable implements Drawable {
         Gfx.scanlineFill(r, Gfx.rect(midX - (barThickness / 2), winY, barThickness, winH), null, frame);
         Gfx.scanlineFill(r, Gfx.rect(winX, midY - (barThickness / 2), winW, barThickness), null, frame);
 
-        // เส้นขอบสีเข้มสไตล์งานวาด
         Gfx.polyline(r, Gfx.rect(winX, winY, winW, winH), true, 1.5, sunRay);
     }
 
-    /** วงรีที่ระบุด้วยกรอบสี่เหลี่ยมแบบ fillOval เดิม */
     private static void oval(Raster r, int x, int y, int w, int h, int argb) {
         Gfx.fillEllipse(r, x + w / 2, y + h / 2, w / 2, h / 2, argb);
     }

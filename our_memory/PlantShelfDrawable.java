@@ -1,16 +1,11 @@
 /**
- * ชั้นวางต้นไม้ 3 กระถาง พอร์ตมาจาก Scene.drawPlantShelf / drawPottedPlant
- *
- * ย่อขนาดด้วยการคูณตัวเลขเอง ไม่มี transform ของ Java2D ให้ใช้แล้ว
- * พิกัดเป็นพิกเซลจอตรงๆ ไม่ขยายตามหน้าต่าง เหมือน WallClockDrawable
- *
- * สีมาจาก ArtConfig ที่เดียว
+ * ชั้นวางต้นไม้ 3 กระถาง
  */
 public class PlantShelfDrawable implements Drawable {
 
-    /** ขนาดดั้งเดิมใน Scene ก่อนย่อ */
+    /** ขนาดเดิมใน Scene  */
     private static final double BOARD_W = 180, BOARD_H = 12;
-    private static final double[] POT_DX = { 40, 94, 142 };  // ระยะจากขอบซ้ายของชั้น
+    private static final double[] POT_DX = { 40, 94, 142 };  
     private static final int[] POT_RX = { 20, 15, 18 };
 
     private final int centreX;
@@ -25,7 +20,6 @@ public class PlantShelfDrawable implements Drawable {
 
     @Override
     public void draw(Raster r, double time) {
-        // time ไม่ใช้ - ชั้นวางไม่ขยับ แต่ต้องรับตาม interface
         int boardW = sc(BOARD_W);
         int boardH = sc(BOARD_H);
         int left = centreX - boardW / 2;
@@ -38,7 +32,6 @@ public class PlantShelfDrawable implements Drawable {
         Gfx.scanlineFill(r, board, null, wood);
         Gfx.polyline(r, board, true, edge, woodD);
 
-        // ขายึดสองอัน เอียงเข้าหากันเหมือนต้นฉบับ
         int bTop = shelfY + boardH;
         int bBot = shelfY + sc(36);
         Gfx.thickLine(r, left + sc(28), bTop, left + sc(32), bBot, edge, woodD);
@@ -57,7 +50,7 @@ public class PlantShelfDrawable implements Drawable {
         int leafDark = Raster.argb(ArtConfig.LEAF_DARK);
         double leafEdge = Math.max(1, 2.2 * scale);
 
-        // ใบไม้ก่อน กระถางจะได้ทับโคนก้าน - ใบละสอง Bézier กำลังสองต่อกันเป็นรูปปิด
+        // กระถางจะได้ทับโคนก้าน - ใบ Bezier2
         for (int i = -1; i <= 1; i++) {
             double tipX = cx + i * rx * 1.5;
             double tipY = baseY - sc(34) - rx - Math.abs(i) * sc(-8);
@@ -67,7 +60,7 @@ public class PlantShelfDrawable implements Drawable {
             double[] b = Gfx.bezier2(tipX, tipY,
                     cx + i * rx * 0.4, baseY - sc(32), cx, baseY - lip, 16);
 
-            // ต่อสองเส้นเป็นคอนทัวร์เดียว ตัดจุดซ้ำตรงรอยต่อออก
+            // ต่อสองเส้นเป็นคอนทัวร์เดียว ตัดจุดซ้ำ
             double[] leaf = new double[a.length + b.length - 2];
             System.arraycopy(a, 0, leaf, 0, a.length);
             System.arraycopy(b, 2, leaf, a.length, b.length - 2);
@@ -91,7 +84,6 @@ public class PlantShelfDrawable implements Drawable {
         Gfx.polyline(r, Gfx.ellipsePoints(cx, baseY - lip, rx, rim), true, 1, woodD);
     }
 
-    /** ย่อระยะหนึ่งค่าแล้วปัดเป็นพิกเซลเต็ม */
     private int sc(double v) {
         return (int) Math.round(v * scale);
     }

@@ -7,10 +7,7 @@ import java.util.Arrays;
 /**
  * Flood Fill / Rasterization Engine
  *
- * รับ Path2D แล้วคืนภาพลายเส้นที่ลงสีเสร็จแล้ว (ยังไม่รวม Drawable)
- *
- * ทุกพิกเซลในภาพมาจาก Raster.plot() ผ่าน Gfx ไม่มีคำสั่งวาดของ Java2D เหลืออยู่
- * ที่ต้องเรนเดอร์ลง Raster ก่อน เพราะ flood fill ต้อง "อ่าน" พิกเซลกลับมา
+ * รับ Path2D แล้วคืนภาพลายเส้นที่ลงสีเสร็จแล้ว 
  */
 public final class FillEngine {
 
@@ -18,29 +15,22 @@ public final class FillEngine {
     }
 
     /**
-     * วาดเฉพาะพื้นหลัง (SVG + flood fill) ไม่รวม Drawable
-     *
-     * รับ seed กับเส้นอุดเข้ามาเป็นพารามิเตอร์ ไม่ไปหยิบจาก ArtConfig เอง
-     * แต่ละซีนจึงส่งชุดของตัวเองมาได้ และไม่มีการอ้าง seed ด้วย index อีก
+     * วาดเฉพาะพื้นหลัง SVG + flood fill 
      */
     public static BufferedImage rasteriseBackground(Path2D path, ArtConfig.Seed[] seeds,
             double[][] dams, AffineTransform at, int w, int h, boolean colorOn) {
 
-        // ARGB ไม่ใช่ RGB เพราะตอนท้ายจะทำบริเวณผนังให้โปร่ง
-        // props ที่วาดไว้ก่อนหน้าจะได้ทะลุขึ้นมาได้ ตัวละครจึงอยู่หน้า props
         Raster r = new Raster(w, h);
         r.clear(0xFF000000 | ArtConfig.BLANK);
 
         int ink = Raster.argb(ArtConfig.INK);
 
-        // ---- ลายเส้นตัวละคร ----
-        // ต้องทั้งถมและลากขอบ - เส้น potrace เป็นสลิ่วบางที่แค่แตะกัน ถมอย่างเดียว
-        // เหลือรูจิ๋วให้สีลอดทะลุ (ดู docs/setup.md หัวข้อ "สามข้อที่ห้ามแตะ")
+        // ลายเส้นตัวละคร ถมและลากขอบ
         Gfx.Contours c = Gfx.contours(at.createTransformedShape(path));
         Gfx.scanlineFill(r, c.pts, c.ends, ink);
-        Gfx.strokeContours(r, c, 1, ink);
+        Gfx.strokeContours(r, c, 1.5, ink);
 
-        // ---- เส้นอุด (DAMS) ----
+        // เส้นอุด 
         double damW = Math.max(3, ArtConfig.DAM_WIDTH * at.getScaleX());
         Point2D.Double p1 = new Point2D.Double();
         Point2D.Double p2 = new Point2D.Double();
@@ -54,7 +44,7 @@ public final class FillEngine {
 
         if (!colorOn) return r.image();
 
-        // ---- ลงสีทีละ seed ----
+        // ลงสีทีละ seed
         int[] px = r.px;
         int radius = Math.max(2, (int) Math.round(1.5 * at.getScaleX()));
 
@@ -69,9 +59,6 @@ public final class FillEngine {
             int start = findBlankNear(px, w, h, sx, sy, radius);
             if (start >= 0) {
                 floodFill(px, w, h, start % w, start / w, want);
-            } else if (!hasColourNear(px, w, h, sx, sy, radius, want)) {
-                System.err.println("[seed] (" + seed.x + ", " + seed.y + ") ที่ " + w + "x" + h
-                        + " - บริเวณรวมกับเพื่อนบ้านคนละสี");
             }
         }
 
@@ -79,15 +66,6 @@ public final class FillEngine {
         return r.image();
     }
 
-    /**
-     * เปลี่ยนพิกเซลสีผนังให้โปร่งใส
-     *
-     * ต้องทำ "หลัง" flood fill ครบทุก seed แล้วเท่านั้น - พิกเซลโปร่งมีค่า RGB
-     * เป็น 0 ซึ่งชนกับสีหมึกดำ ถ้าทำระหว่างทางจะไปกวน seed ตัวถัดไป
-     *
-     * ผลคือ props ที่ panel วาดไว้ก่อนหน้าทะลุขึ้นมาตรงผนังได้ ตัวละครจึงอยู่หน้า
-     * props แทนที่จะถูกทับ
-     */
     private static void makeWallTransparent(int[] px) {
         int wall = ArtConfig.BACKDROP.getRGB() & 0xFFFFFF;
         for (int i = 0; i < px.length; i++) {
@@ -95,21 +73,9 @@ public final class FillEngine {
                 px[i] = 0x00000000;
             }
         }
-        // ไม่เตือนตรงนี้ - ภาพทึบทั้งใบเป็นปัญหาก็ต่อเมื่อซีนนั้นมี props อยู่ข้างหลัง
-        // ซึ่ง FillEngine ไม่รู้ คนเรียกเป็นคนเช็ค
     }
 
-    /** ภาพนี้มีพิกเซลโปร่งบ้างไหม - ใช้เช็คว่าซีนลืม seed BACKDROP หรือเปล่า */
-    public static boolean hasTransparent(BufferedImage img) {
-        for (int y = 0; y < img.getHeight(); y++) {
-            for (int x = 0; x < img.getWidth(); x++) {
-                if ((img.getRGB(x, y) >>> 24) == 0) return true;
-            }
-        }
-        return false;
-    }
-
-    // =================== Flood Fill ===================
+    // Flood Fill
     public static void floodFill(int[] px, int w, int h, int sx, int sy, int rgb) {
         int fill = rgb & 0xFFFFFF;
         if (fill == ArtConfig.BLANK || (px[sy * w + sx] & 0xFFFFFF) != ArtConfig.BLANK) return;
@@ -163,14 +129,5 @@ public final class FillEngine {
             }
         }
         return -1;
-    }
-
-    public static boolean hasColourNear(int[] px, int w, int h, int sx, int sy, int maxR, int rgb) {
-        for (int y = Math.max(0, sy - maxR); y <= Math.min(h - 1, sy + maxR); y++) {
-            for (int x = Math.max(0, sx - maxR); x <= Math.min(w - 1, sx + maxR); x++) {
-                if ((px[y * w + x] & 0xFFFFFF) == rgb) return true;
-            }
-        }
-        return false;
     }
 }

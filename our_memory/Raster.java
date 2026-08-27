@@ -2,22 +2,15 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 
 /**
- * Framebuffer - ที่เดียวในโปรเจกต์ที่แตะพิกเซล
- *
- * ทุกอย่างที่ปรากฏบนจอผ่าน plot() ตัวนี้ตัวเดียว ไม่มีคำสั่งวาดรูปทรงของ Java2D
- * เหลืออยู่เลย Gfx สร้างเส้นและรูปทรงจาก plot() ส่วน FillEngine ทำ flood fill
- * บน px[] ตรงๆ
- *
- * ที่ต้องมี buffer เก็บผลไว้ ไม่ใช่วาดลงจอตรงๆ เพราะ flood fill ต้อง "อ่าน" ค่า
- * พิกเซลข้างเคียงกลับมาเพื่อรู้ว่าชนขอบหมึกหรือยัง ซึ่ง Graphics2D ทำไม่ได้
+ * Framebuffer - ที่เดียวที่ทำพิกเซล
  */
 public final class Raster {
 
-    /** ARGB หนึ่งช่องต่อพิกเซล เรียงทีละแถว - FillEngine เข้าถึงตรงๆ ตอน flood fill */
+    /** ARGB หนึ่งช่องต่อพิกเซล เรียงทีละแถว - FillEngine เข้าถึงตอน flood fill */
     public final int[] px;
     public final int w, h;
 
-    /** ขอบเขตที่ยอมให้เขียน - มาแทน g.setClip() ปลายทั้งสองข้างรวมอยู่ในช่วง */
+    /** กำหนดขอบเขต */
     private int clipX0, clipY0, clipX1, clipY1;
 
     private final BufferedImage image;
@@ -30,12 +23,12 @@ public final class Raster {
         clipAll();
     }
 
-    /** ภาพที่เอาไป blit ขึ้นจอ - พิกเซลทุกช่องในนี้มาจาก plot() ทั้งหมด */
+    /** ภาพที่เอาไป blit ขึ้นจอ plot() ทั้งหมด */
     public BufferedImage image() {
         return image;
     }
 
-    // =================== clip ===================
+    // clip 
 
     public void clip(int x, int y, int cw, int ch) {
         clipX0 = Math.max(0, x);
@@ -51,7 +44,7 @@ public final class Raster {
         clipY1 = h - 1;
     }
 
-    /** เก็บ clip ปัจจุบันไว้คืนทีหลัง - คืนค่าเป็น {x0,y0,x1,y1} */
+    /** เก็บ clip ปัจจุบันไว้คืนค่าเป็น {x0,y0,x1,y1} */
     public int[] saveClip() {
         return new int[] { clipX0, clipY0, clipX1, clipY1 };
     }
@@ -63,13 +56,10 @@ public final class Raster {
         clipY1 = saved[3];
     }
 
-    // =================== เขียนพิกเซล ===================
+    // เขียนพิกเซล
 
     /**
-     * พล็อตหนึ่งจุด ผสม alpha แบบ src-over ด้วยมือ
-     *
-     * ต้องผสมเองเพราะหลายที่ใช้สีโปร่ง - ลำแสงแดด alpha 25, ป้าย KMITL alpha 240,
-     * ควันกาแฟ alpha 120 และตอนป้ายจางหายก่อนพุ่งเข้าหาคนดู
+     * พล็อตหนึ่งจุด ผสม alpha เพื่อทำให้สีโปร่งแสง
      */
     public void plot(int x, int y, int argb) {
         if (x < clipX0 || x > clipX1 || y < clipY0 || y > clipY1) return;
@@ -86,7 +76,6 @@ public final class Raster {
         int dst = px[i];
         int da = dst >>> 24;
 
-        // out = src + dst * (1 - sa)   คิดบนช่วง 0..255 ปัดด้วยการบวก 127
         int inv = 255 - sa;
         int oa = sa + (da * inv + 127) / 255;
         if (oa == 0) {
@@ -97,7 +86,6 @@ public final class Raster {
         int sr = (argb >> 16) & 0xFF, sg = (argb >> 8) & 0xFF, sb = argb & 0xFF;
         int dr = (dst >> 16) & 0xFF, dg = (dst >> 8) & 0xFF, db = dst & 0xFF;
 
-        // สีที่เก็บไว้ไม่ได้คูณ alpha ล่วงหน้า จึงต้องถ่วงน้ำหนักด้วย alpha ของแต่ละฝั่ง
         int ws = sa * 255;
         int wd = da * inv;
         int tot = ws + wd;
@@ -108,7 +96,6 @@ public final class Raster {
         px[i] = (oa << 24) | (r << 16) | (g << 8) | b;
     }
 
-    /** ถมหนึ่งแถวจาก xa ถึง xb - หัวใจของ scanline fill */
     public void span(int y, int xa, int xb, int argb) {
         if (y < clipY0 || y > clipY1) return;
         if (xa > xb) {
@@ -122,7 +109,6 @@ public final class Raster {
 
         int sa = argb >>> 24;
         if (sa == 255) {
-            // ทึบสนิท เขียนตรงๆ ไม่ต้องผสม
             int row = y * w;
             java.util.Arrays.fill(px, row + xa, row + xb + 1, argb);
         } else {
@@ -130,7 +116,7 @@ public final class Raster {
         }
     }
 
-    /** ล้างทั้งผืน - ไม่ผสม alpha เขียนทับตรงๆ */
+    /** ไม่ผสม alpha เขียนทับตรงๆ */
     public void clear(int argb) {
         java.util.Arrays.fill(px, argb);
     }
@@ -140,7 +126,6 @@ public final class Raster {
         return px[y * w + x];
     }
 
-    /** ARGB จาก java.awt.Color - ใช้สีเดิมใน ArtConfig/Art ต่อได้ */
     public static int argb(java.awt.Color c) {
         return c.getRGB();
     }

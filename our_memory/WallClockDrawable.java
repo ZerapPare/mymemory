@@ -1,11 +1,9 @@
 /**
- * นาฬิกาแขวน - วงกลมจาก midpoint ellipse เข็มกับขีดจาก Bresenham
- *
- * สีมาจาก ArtConfig ที่เดียว
+ * นาฬิกาแขวน - วงกลม midpoint ellipse เข็มกับขีด Bresenham
  */
 public class WallClockDrawable implements Drawable {
     private final int cx, cy;
-    private final double speed;  // รอบต่อวินาที (ปรับได้)
+    private final double speed;  
 
     public WallClockDrawable(int cx, int cy, double speed) {
         this.cx = cx;
