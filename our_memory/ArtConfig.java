@@ -4,11 +4,8 @@ import java.util.Arrays;
 /**
  * Data / Configuration
  *
- * ทุกอย่างที่ "ปรับแต่งได้" อยู่ในไฟล์นี้ไฟล์เดียว - สี, จุดเทสี, เส้นอุด,
- * กรอบภาพ, รายชื่อไฟล์, จังหวะเวลา ไฟล์อื่นเป็นกลไกล้วนๆ
- *
- * จุดสำคัญ: seed ผูกอยู่กับ "ซีน" ไม่ใช่ค่ากลางที่ทุกซีนใช้ร่วมกัน เพราะแต่ละ
- * ซีนท่าทางคนละอย่าง พิกัดที่วัดจากท่านั่งเอาไปใช้กับท่าดีใจไม่ได้
+ * สีทั้งหมดของโปรเจกต์ 
+ * ARGB ด้วย Raster.argb() ก่อนส่งเข้า Gfx
  */
 public final class ArtConfig {
 
@@ -18,22 +15,10 @@ public final class ArtConfig {
     public static final int FRAME_INTERVAL = 360; // ms ต่อเฟรม
     public static final int TICK_INTERVAL = 30; // ms ต่อการวาด
 
-    /**
-     * โฟลเดอร์ที่เก็บไฟล์ SVG - นับจาก repo root จึงต้องรันจากที่นั่นเท่านั้น
-     *
-     * ย้ายโฟลเดอร์ทีหลังก็แก้บรรทัดนี้บรรทัดเดียว ไม่ต้องไล่แก้ทุกที่ที่อ้างชื่อไฟล์
-     */
-    public static final String SVG_DIR = "test_drawSVG/svg/";
+    public static final String SVG_DIR = "our_memory/svg/";
 
-    // =================================================================
-    // สีทั้งหมดของโปรเจกต์อยู่ตรงนี้ที่เดียว
-    //
-    // ทุกตัวเป็น Color เหมือนกันหมด - ฝั่ง Seed ใช้ตรงๆ ส่วน Drawable แปลงเป็น
-    // ARGB ด้วย Raster.argb() ก่อนส่งเข้า Gfx
-    // =================================================================
-
-    // ------ สีในภาพ SVG (ตัวละครกับฉาก) ------
-    public static final Color INK = Color.BLACK;   // ลายเส้น potrace
+    // สีในภาพ SVG
+    public static final Color INK = Color.BLACK;   
     public static final Color BACKDROP = new Color(0xDCEBFF);
     public static final Color TABLE = new Color(0xF2E4CB);
     public static final Color HAIR = new Color(0x6B4A2E);
@@ -56,13 +41,10 @@ public final class ArtConfig {
     public static final Color WOOD_DARK = new Color(0xA87B46);
     public static final Color LEAF = new Color(0x84A96A);
     public static final Color LEAF_DARK = new Color(0x5F8250);
-    /** ใบข้างที่เข้มกว่าใบกลาง = LEAF ผสม LEAF_DARK 45% */
     public static final Color LEAF_SIDE = new Color(0x73975E);
-    /** ปากกระถาง = WOOD ผสมขาว 30% */
     public static final Color POT_RIM = new Color(0xD8B891);
 
     // ------ นาฬิกาแขวน ------
-    /** หน้าปัด = สีผนังเดิม #8B7355 ผสมขาว 70% */
     public static final Color CLOCK_FACE = new Color(0xDCD5CC);
     public static final Color CLOCK_SECOND = new Color(0xE24B4B);
 
@@ -71,7 +53,6 @@ public final class ArtConfig {
     public static final Color CLOUD = new Color(0xF2FAF6);
     public static final Color SUN = new Color(0xF4A229);
     public static final Color WINDOW_FRAME = new Color(0xDDAA66);
-    /** เส้นขอบของ props - ใช้ทั้งรัศมีดวงอาทิตย์และขอบแก้วกาแฟ */
     public static final Color PROP_INK = new Color(0x332B25);
 
     // ------ ของบนโต๊ะ ------
@@ -81,18 +62,12 @@ public final class ArtConfig {
     public static final Color SUNBEAM = new Color(255, 255, 200, 25);
 
     // ------ ป้าย KMITL ------
-    public static final Color BOARD_FACE = Color.WHITE;   // ความโปร่งคิดตอนรันไทม์
+    public static final Color BOARD_FACE = Color.WHITE;   
     public static final Color BOARD_BORDER = new Color(0xFF6600);
     public static final Color SEAL = new Color(0xFF6600);
     public static final Color SEAL_EDGE = Color.ORANGE;
     public static final Color BOARD_TEXT = Color.BLACK;
 
-    // ------ HUD ------
-    public static final Color HUD_MAIN = new Color(0x66000000, true);
-    public static final Color HUD_PICK = new Color(0xCC0033AA, true);
-
-
-    /** จุดเริ่มเทสีหนึ่งจุด พิกัดเป็นหน่วย viewBox ไม่ใช่พิกเซลจอ */
     public static class Seed {
         public final double x, y;
         public final Color color;
@@ -106,18 +81,12 @@ public final class ArtConfig {
 
     /**
      * หนึ่งซีน = ไฟล์ภาพ + seed ของตัวเอง + เส้นอุดของตัวเอง
-     *
-     * ที่ต้องแยกต่อซีนเพราะพอเปลี่ยนท่า ตำแหน่งผม/หน้า/เสื้อ ก็ย้ายตาม
-     * seed ชุดเดิมจะไปตกบนเส้นหรือตกผิดบริเวณ
      */
     public static final class Scene {
         public final String name;
         public final String[] files;
-        /** seed ที่ทุกเฟรมในซีนนี้ใช้ร่วมกัน (ส่วนที่ไม่ขยับระหว่างเฟรม) */
         public final Seed[] common;
-        /** seed เฉพาะเฟรม เรียงตรงกับ files - สั้นกว่า files ได้ */
         public final Seed[] perFrame;
-        /** เส้นอุดของซีนนี้ {x1,y1,x2,y2} */
         public final double[][] dams;
 
         public Scene(String name, String[] files, Seed[] common, Seed[] perFrame, double[][] dams) {
@@ -129,10 +98,7 @@ public final class ArtConfig {
         }
 
         /**
-         * seed ทั้งหมดของเฟรมที่ i
-         *
-         * ต่อ perFrame ไว้ "ท้ายสุด" เสมอ - flood fill เทลงเฉพาะพิกเซลขาว
-         * ถ้ามี seed สองจุดตกบริเวณเดียวกัน ตัวแรกชนะ ลำดับจึงมีผลต่อภาพ
+         * ถ้ามี seed สองจุดบริเวณเดียวกัน ตัวแรกชนะ
          */
         public Seed[] seedsFor(int i) {
             if (i < 0 || i >= perFrame.length) {
@@ -144,14 +110,12 @@ public final class ArtConfig {
         }
     }
 
-    /** เส้นอุดของห้องเรียน - ขอบโต๊ะใน SVG จบกลางอากาศ ไม่ลากถึงขอบภาพ */
     private static final double[][] ROOM_DAMS = {
             { 149.4, 355.4, -37.4, 456.5 },
             { 485.1, 238.3, 659.5, 262.5 },
     };
 
-    // ==================== ซีน 1 : นั่งรอหน้าจอ ====================
-
+    // ซีน1:นั่งรอหน้าจอ
     private static final Seed[] SITTING = {
             new Seed(30.0, 30.0, BACKDROP),
             new Seed(317.8, 257.2, BACKDROP),
@@ -186,7 +150,6 @@ public final class ArtConfig {
             new Seed(305.6, 161.3, SKIN)
     };
 
-    /** จอแท็บเล็ตขยับตามเฟรม จึงต้องมี seed ต่อเฟรม */
     private static final Seed[] SITTING_SCREENS = {
             new Seed(411.7, 289.3, SCREEN),
             new Seed(365.4, 323.6, SCREEN),
@@ -207,14 +170,11 @@ public final class ArtConfig {
             },
             SITTING, SITTING_SCREENS, ROOM_DAMS);
 
-    // ==================== ซีน 2 : ตกใจ ====================
-    // พิกัดชุดนี้ต้องวัดจากภาพ b1 เอง ใช้ของซีน 1 ไม่ได้เพราะท่าคนละท่า
-    // หาเพิ่มได้ด้วยการรันแล้วคลิกบนรูป มันพิมพ์บรรทัด Seed ให้
-
+    //ซีน2:ตกใจ 
     private static final Seed[] SHOCKED = {
             new Seed(30.0, 30.0, BACKDROP),      // ผนัง
             new Seed(341.3, 129.0, BACKDROP),
-            new Seed(298.9, 451.8, TABLE),       // โต๊ะ - แยกจากผนังได้เพราะเส้นอุด
+            new Seed(298.9, 451.8, TABLE),       // โต๊ะ 
             new Seed(190.2, 192.0, SHIRT),       // ลำตัว
             // ดีเทลเสื้อ
             new Seed(150.6, 136.8, SHIRT),
@@ -222,7 +182,7 @@ public final class ArtConfig {
             new Seed(190.7, 132.3, SHIRT),
             new Seed(185.1, 136.8, SHIRT),
             new Seed(165.1, 142.4, SHIRT),
-            new Seed(371.7, 145.3, SHIRT),       // แขนขวาที่ยกขึ้น
+            new Seed(371.7, 145.3, SHIRT),       // แขนขวา
             new Seed(297.8, 72.4, HAIR),         // ผม
             new Seed(264.3, 105.6, HAIR),
             new Seed(265.2, 123.5, SKIN),        // ใบหน้า
@@ -254,7 +214,6 @@ public final class ArtConfig {
             new Seed(382.5, 310.8, HAT),
     };
 
-    /** ซีนนี้มีเฟรมเดียว ไม่มีอะไรขยับระหว่างเฟรม */
     private static final Seed[] SHOCKED_FISTS = {};
 
     public static final Scene SCENE_2 = new Scene("shock",
@@ -262,14 +221,11 @@ public final class ArtConfig {
                     SVG_DIR + "b1.svg",
             }, SHOCKED, SHOCKED_FISTS, ROOM_DAMS);
 
-    // ==================== ซีน 3 : ดีใจ ====================
-    // พิกัดชุดนี้ต้องวัดจากภาพ c1/c2 เอง ใช้ของซีน 1 ไม่ได้เพราะท่าคนละท่า
-    // หาเพิ่มได้ด้วยการรันแล้วคลิกบนรูป มันพิมพ์บรรทัด Seed ให้
-
+    // ซีน3:ดีใจ 
     private static final Seed[] CELEBRATING = {
             new Seed(30.0, 30.0, BACKDROP), // ผนัง
             new Seed(344.6, 131.2, BACKDROP),
-            new Seed(298.9, 451.8, TABLE), // โต๊ะ - แยกจากผนังได้เพราะเส้นอุด
+            new Seed(298.9, 451.8, TABLE), // โต๊ะ
             new Seed(203.3, 302.9, SHIRT), // ลำตัว
             new Seed(302.2, 275.1, SHIRT),
             new Seed(346.5, 247.0, SHIRT), // แขนเสื้อ
@@ -301,7 +257,6 @@ public final class ArtConfig {
 
     };
 
-    /** กำปั้นที่ชูขึ้นขยับระหว่างเฟรม จึงต้องมี seed ต่อเฟรม */
     private static final Seed[] CELEBRATING_FISTS = {};
 
     public static final Scene SCENE_3 = new Scene("happy",
@@ -314,16 +269,15 @@ public final class ArtConfig {
     private static final double[][] SAD_DAMS = {
             { 6.7, 630.5, -70.9, 660.7 },       
             { 461.5, 425, 461.5, -240 },    
-            // { 564.3, 253.5, 577.7, 246.8 }, 
             {1197, 336, 1197, 385}, 
             { 550, 764.3, 1249.1, 768.8}     
             
     };
 
     private static final Seed[] SAD = {
-            new Seed(1063.8, 135.9, BACKDROP),   // ผนัง - ต่อถึงกันทั้งซ้ายขวาผ่าน margin ด้านบน
-            new Seed(107.0, 681.8, TABLE),       // โต๊ะ + เก้าอี้ (ต่อกันผ่าน margin ขวา)
-            new Seed(421.2, 507.8, TABLE),       // แผงโต๊ะที่ยกขึ้นหลังคีย์บอร์ด
+            new Seed(1063.8, 135.9, BACKDROP),   // ผนัง 
+            new Seed(107.0, 681.8, TABLE),       // โต๊ะ + เก้าอี้ 
+            new Seed(421.2, 507.8, TABLE),       
             new Seed(659.0, 135.0, HAIR),        // ผม
             new Seed(651.9, 295.7, SKIN),        // ใบหน้า
             new Seed(615.5, 245.1, DARKCIRCLE),        // เลนส์แว่น
@@ -337,8 +291,8 @@ public final class ArtConfig {
             new Seed(811.7, 458.1, SHIRT),       // ลำตัว
             new Seed(910.2, 333.9, SHIRT),       // แขนขวาที่เท้าหลัง
             new Seed(695.4, 547.8, SHIRT),       // แขนซ้ายที่พิมพ์
-            new Seed(991.0, 471.4, SHIRT),       // รอยจีบข้างลำตัว
-            new Seed(1027.4, 433.3, SHIRT),      // รักแร้
+            new Seed(991.0, 471.4, SHIRT),       
+            new Seed(1027.4, 433.3, SHIRT),      
             new Seed(913.8, 680.0, SHIRT),       // ชายเสื้อ
             new Seed(738.9, 523.8, INSIDESHIRT), // สาบเสื้อ
             new Seed(752.2, 645.4, BACKDROP),   // ขอบโต๊ะด้านซ้าย
@@ -363,10 +317,10 @@ public final class ArtConfig {
             new Seed(107.8, 168.8, MONITOR),     // แถบเครื่องมือ
             new Seed(120.3, 146.6, MONITOR),     // แถบหัวหน้าต่าง
             new Seed(128.3, 191.8, MONITOR),     // แถบที่อยู่
-            new Seed(287.1, 162.6, MONITOR),     // หัวแผงโค้ด
-            new Seed(209.0, 485.6, MONITOR),     // แถบสถานะล่าง
+            new Seed(287.1, 162.6, MONITOR),     
+            new Seed(209.0, 485.6, MONITOR),     
             new Seed(122.9, 496.3, MONITOR),
-            new Seed(182.8, 473.1, MONITOR),     // เศษพื้นจอที่เหลือ - ถ้าไม่เท จะเป็นรอยขาวบนจอมืด
+            new Seed(182.8, 473.1, MONITOR),     
             new Seed(282.8, 182.4, MONITOR),
             new Seed(413.0, 423.1, MONITOR),
             new Seed(192.2, 521.0, MONITOR),
@@ -386,7 +340,7 @@ public final class ArtConfig {
             new Seed(272.9, 577.9, DEVICE),      // ฐานจอ
             new Seed(370.6, 575.3, DEVICE),
             new Seed(244.3, 611.6, DEVICE),
-            new Seed(143.2, 561.6, DEVICE),      // มุมล่างซ้ายของกรอบจอ
+            new Seed(143.2, 561.6, DEVICE),     
             new Seed(288.0, 135.0, DEVICE),      // ตัวนาฬิกา
             new Seed(363.5, 649.8, DEVICE),      // คีย์บอร์ด
             new Seed(514.3, 652.5, DEVICE),
@@ -400,60 +354,19 @@ public final class ArtConfig {
             new String[] { SVG_DIR + "d.svg" },
             SAD, SAD_PERFRAME, SAD_DAMS);
 
-    /** ลำดับการเล่น - จบซีนหนึ่งแล้วไปซีนถัดไป วนกลับมาซีนแรก */
+    /** ลำดับการเล่น */
     public static final Scene[] SCENES = { SCENE_1, SCENE_2, SCENE_3 , SCENE_4};
 
 	public static final int[] SCENE_DURATION = {
-		5000, // Scene 1 = 5 วินาที
-		2000, // Scene 2 = 2 วินาที
-		6000,  // Scene 3 = 6 วินาที 
-		4000,  // Scene 4 = 4 วินาที
+		5000, 
+		2000, 
+		6000,  
+		4000,  
 	};
 
-    /** เทสีลงเฉพาะพิกเซลขาวล้วน เส้นหมึกและสีที่เทไปแล้วกั้นอยู่ */
     public static final int BLANK = 0xFFFFFF;
 
-    /** ทุกเฟรมใช้กรอบนี้ร่วมกัน ไม่ใช้ bounds ของแต่ละเฟรม */
     public static final double VBW = 600, VBH = 384, PAD = 24;
 	public static final double VBW_SAD = 1200, VBH_SAD = 768;
-
     public static final double DAM_WIDTH = 1.0;
-
-    /** บอกว่าพิกเซลนั้นคืออะไร จะได้รู้ว่าคลิกโดนเส้นหรือโดนช่องว่าง */
-    public static String describe(int rgb) {
-        if (rgb == 0x000000)
-            return "black";
-        if (rgb == BLANK)
-            return "blank";
-        if (rgb == (BACKDROP.getRGB() & 0xFFFFFF))
-            return "background";
-        if (rgb == (HAIR.getRGB() & 0xFFFFFF))
-            return "hair";
-        if (rgb == (SKIN.getRGB() & 0xFFFFFF))
-            return "skin";
-        if (rgb == (SHIRT.getRGB() & 0xFFFFFF))
-            return "shirt";
-        if (rgb == (SCREEN.getRGB() & 0xFFFFFF))
-            return "screen";
-        if (rgb == (TABLE.getRGB() & 0xFFFFFF))
-            return "table";
-        if (rgb == (INSIDESHIRT.getRGB() & 0xFFFFFF))
-            return "insideshirt";
-        if (rgb == (MOUTH.getRGB() & 0xFFFFFF))
-            return "mouth";
-        if (rgb == (TEAR.getRGB() & 0xFFFFFF))
-            return "tear";
-        if (rgb == (STAR.getRGB() & 0xFFFFFF))
-            return "star";
-        if (rgb == (HAT.getRGB() & 0xFFFFFF))
-            return "hat";
-        if (rgb == (MONITOR.getRGB() & 0xFFFFFF))
-            return "monitor";
-        if (rgb == (DEVICE.getRGB() & 0xFFFFFF))
-            return "device";
-        if (rgb == (PANTS.getRGB() & 0xFFFFFF))
-            return "pants";
-        return String.format("#%06X", rgb);
-    }
-
 }

@@ -1,8 +1,7 @@
 /**
- * ของบนโต๊ะ - ลำแสงแดดเฉียง กับแก้วกาแฟที่มีควันลอย
+ * ของบนโต๊ะ 
  *
- * ลำแสงกับควันใช้สีโปร่ง ซึ่ง Raster.plot() ผสม alpha ให้เอง
- * สีมาจาก ArtConfig ที่เดียว
+ * แสงกับควันใช้สีโปร่ง Raster.plot() ผสม alpha 
  */
 public class DeskDecorDrawable implements Drawable {
 
@@ -13,13 +12,12 @@ public class DeskDecorDrawable implements Drawable {
     }
 
     private void drawSunlight(Raster r, int w, int h) {
-        // ตำแหน่งหน้าต่างขวาบน ต้องตรงกับ WindowBackgroundDrawable
         int winX = w - (int) (w * 0.28) - 15;
         int winY = 15;
         int winW = (int) (w * 0.28);
         int winH = (int) (h * 0.32);
 
-        // ลำแสงแดดสีขาวโปร่งแสง (alpha 25)
+        // แสงแดดสีขาวโปร่งแสง alpha 25
         double[] beam = {
                 winX, winY + (winH * 0.3),          // จุดเริ่มบนซ้ายหน้าต่าง
                 winX + winW, winY + winH,           // มุมขวาล่างหน้าต่าง
@@ -45,11 +43,11 @@ public class DeskDecorDrawable implements Drawable {
         int rim = Raster.argb(ArtConfig.PROP_INK);
         Gfx.polyline(r, cup, true, 2, rim);
 
-        // หูจับแก้ว - ส่วนโค้งครึ่งวงทางขวา ตรงกับ drawArc(-90, 180) เดิม
+        // หูจับแก้ว 
         Gfx.polyline(r, Gfx.arcPoints(cupX + cupW - 4 + 7, cupY + 10 + 12, 7, 12, -90, 180),
                 false, 2, rim);
 
-        // ควันกาแฟ - Bézier กำลังสามที่ส่ายตามเวลา
+        // ควันกาแฟ 
         int steamColor = Raster.argb(ArtConfig.STEAM);
         for (int i = 0; i < 2; i++) {
             double offsetX = (i == 0) ? 12 : 26;

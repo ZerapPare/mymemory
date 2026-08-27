@@ -10,16 +10,13 @@ import java.util.regex.Pattern;
  *
  * อ่านไฟล์ SVG ด้วย regex แล้วแปลงคำสั่งใน d="..." เป็น Path2D
  * เส้นตรงกับเส้นโค้งคำนวณจุดเอง ไม่เรียก path.curveTo ของ Java2D
- *
- * static ล้วนได้เพราะปลายปากกา (curX/curY) เป็นตัวแปรท้องถิ่นใน parseSvgPath
- * แล้วส่งเข้าไปเป็นพารามิเตอร์ ไม่ใช่ field ที่ค้างข้ามไฟล์
  */
 public final class SvgLoader {
 
     private SvgLoader() {
     }
 
-    /** โหลดหนึ่งไฟล์ ได้ Path2D ที่ผ่าน group transform แล้ว คืน null ถ้าอ่านไม่ได้ */
+    /** โหลดหนึ่งไฟล์ ได้ Path2D ที่ผ่าน group transform คืน null ถ้าอ่านไม่ได้ */
     public static Path2D loadSvg(String fileName) {
         File file = new File(fileName);
         if (!file.exists()) return null;
@@ -46,7 +43,7 @@ public final class SvgLoader {
         return targetPath;
     }
 
-    // =================== SVG Path Parser ===================
+    // SVG Path Parser 
     public static Path2D parseSvgPath(String d) {
         Path2D.Double path = new Path2D.Double();
         Pattern p = Pattern.compile("([a-zA-Z])|([-+]?\\d*\\.?\\d+(?:[eE][-+]?\\d+)?)");
@@ -119,7 +116,7 @@ public final class SvgLoader {
         }
     }
 
-    /** คำนวณจุดตามสูตร Cubic Bézier แล้วใส่ลงใน Path2D */
+    /** คำนวณจุดตามสูตร Cubic Bezier แล้วใส่ลงใน Path2D */
     public static void customCurveTo(Path2D.Double path, double x1, double y1, double x2, double y2, double x3, double y3, double curX, double curY) {
         int steps = 30;
         double x0 = curX, y0 = curY;
